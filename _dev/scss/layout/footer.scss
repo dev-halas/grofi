@@ -1,0 +1,67 @@
+@use "../base/mixins.scss";
+@use "../base/values.scss";
+
+.footerContent {
+    display: grid;
+    grid-template-columns: 4fr 6fr;
+    gap: 36px;
+    padding: 32px 0;
+    line-height: 1.8;
+
+    @include mixins.responsive('small') {
+      grid-template-columns: 1fr;
+    }
+}
+
+.footerMenuContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+
+  @include mixins.responsive('small') {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footerMenu {
+    span {
+      color: values.$orange;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    a {
+      @include mixins.transition(color);
+    }
+
+    a:hover {
+      color: values.$orange;
+    }
+  }
+}
+
+.footerHead {
+  padding: 32px 0;
+  border-bottom: 1px solid values.$lightGray;
+}
+
+.footerSocial {
+  display: flex;
+  gap: 16px;
+
+  .footerSocialItem {
+    border: 1px solid values.$orange;
+    background-color: values.$whiteOrange;
+    width: 60px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @include mixins.transition(background-color);
+
+    &:hover {
+      background-color: values.$darkOrange;
+    }
+  }
+}

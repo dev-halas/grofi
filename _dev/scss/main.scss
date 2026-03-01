@@ -1,0 +1,13 @@
+@use './base/reset.scss';
+@use './base/core.scss';
+
+@use './layout/header.scss';
+/* 
+    other styles 
+    footer should be last
+*/ 
+@use './layout/woocommerce.scss';
+@use './woocommerce/index.scss';
+@use './layout/footer.scss';
+
+

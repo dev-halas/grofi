@@ -1,0 +1,124 @@
+@use "mixins.scss";
+@use "values.scss";
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 10vh;
+}
+
+body {
+    background-color: values.$whiteGray;
+    color: values.$black;
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-display: swap;
+    font-size: clamp(14px, 0.83vw, 18px);
+    font-weight: normal;
+    line-height: 1.4;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 100svh;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+h2 {
+    font-size: 1.8rem;
+}
+
+h3 {
+    font-size: 1.6rem;
+}
+
+h4 {
+    font-size: 1.4rem;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    line-height: 1.5;
+}
+
+
+ul:not([class]) {
+    list-style: inside square;
+
+    li::marker {
+        color: values.$orange;
+    }
+}
+
+.container {
+    width: min(90vw, 1440px);
+    margin: 0 auto;
+    position: relative;
+}
+
+.flex {
+    display: flex;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.gap-16 {
+    gap: 16px;
+}
+
+.list-style-none {
+    list-style: none;
+}
+
+.mb-16 {
+    margin-bottom: 16px;
+}
+
+.fontOrange {
+    color: values.$orange;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+
+    @include mixins.transition('all');
+}
+
+.button--orange {
+    background-color: values.$orange;
+    color: values.$white;
+    border: 1px solid values.$orange;
+
+    &:hover {
+        background-color: values.$darkOrange;
+        border-color: values.$darkOrange;
+    }
+}
+
+.button--light {
+    background-color: values.$white;
+    color: values.$orange;
+    border: 1px solid values.$orange;
+
+    &:hover {
+        border-color: values.$orange;
+        color: values.$white;
+        background-color: values.$orange;
+    }
+}

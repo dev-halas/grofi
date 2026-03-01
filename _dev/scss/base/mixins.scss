@@ -1,0 +1,41 @@
+@use "sass:map";
+
+$breakpoints: (
+  'mobile': 480px,
+  'small': 768px,
+  'tablet': 1024px,
+  'laptop': 1200px,
+  'large': 1600px,
+  'fullhd': 1920px
+) !default;
+
+@mixin responsive($breakpoint) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    @media (max-width: map.get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "No value found for `#{$breakpoint}`. Available: #{map.keys($breakpoints)}.";
+  }
+}
+
+
+@mixin transition($property...){
+  transition-property: $property;
+  -webkit-transition-property: $property;
+  -moz-transition-property: $property;
+  -ms-transition-property: $property;
+  -o-transition-property: $property;
+
+  transition-timing-function: ease-in-out;
+  -webkit-transition-timing-function: ease-in-out;
+  -moz-transition-timing-function: ease-in-out;
+  -ms-transition-timing-function: ease-in-out;
+  -o-transition-timing-function: ease-in-out;
+  
+  transition-duration: .2s;
+  -webkit-transition-duration: .2s;
+  -moz-transition-duration: .2s;
+  -ms-transition-duration: .2s;
+  -o-transition-duration: .2s;
+}

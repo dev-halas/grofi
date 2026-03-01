@@ -1,0 +1,733 @@
+@use '../base/values.scss' as v;
+@use '../base/mixins.scss' as m;
+
+// -------------------------------------------------------
+// Nagłówek archiwum (sklep / kategoria)
+// -------------------------------------------------------
+.woocommerce-products-header {
+	margin-bottom: 32px;
+
+	&__title {
+		font-size: 2rem;
+		font-weight: 700;
+		color: v.$black;
+	}
+}
+
+// -------------------------------------------------------
+// Pasek narzędzi (sortowanie / liczba wyników)
+// -------------------------------------------------------
+.woocommerce-ordering {
+	select {
+		border: 1px solid v.$lightGray;
+		border-radius: 6px;
+		padding: 8px 12px;
+		font-size: 0.875rem;
+		color: v.$black;
+		background-color: v.$white;
+		cursor: pointer;
+		outline: none;
+
+		&:focus {
+			border-color: v.$orange;
+		}
+	}
+}
+
+.woocommerce-result-count {
+	font-size: 0.85rem;
+	opacity: 0.6;
+	margin-block: auto;
+}
+
+// -------------------------------------------------------
+// Layout sklepu — sidebar po lewej + siatka produktów
+// -------------------------------------------------------
+.shop-layout {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 32px;
+	align-items: start;
+
+	@include m.responsive('tablet') {
+		grid-template-columns: 220px 1fr;
+		gap: 24px;
+	}
+
+	@include m.responsive('small') {
+		grid-template-columns: 1fr;
+	}
+
+	&__sidebar {
+		grid-column: span 1;
+	}
+
+	&__content {
+		grid-column: span 3;
+		position: relative;
+		transition: opacity 0.18s ease;
+
+		// Stan ładowania AJAX — przyciemnienie + spinner
+		&.is-loading {
+			opacity: 0.35;
+			pointer-events: none;
+
+			&::after {
+				content: '';
+				position: absolute;
+				top: 48px;
+				left: 50%;
+				transform: translateX(-50%);
+				width: 36px;
+				height: 36px;
+				border: 3px solid rgba(0, 0, 0, 0.1);
+				border-top-color: v.$orange;
+				border-radius: 50%;
+				animation: shopContentLoading 0.55s linear infinite;
+				z-index: 10;
+			}
+		}
+	}
+}
+
+@keyframes shopContentLoading {
+	to { transform: translateX(-50%) rotate(360deg); }
+}
+
+// -------------------------------------------------------
+// Filtry sklepu — marka + cena
+// -------------------------------------------------------
+.shop-filters {
+	padding: 0;
+	margin-top: 8px;
+
+	&__form {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+
+	// Sekcja (Marka / Cena)
+	&__section {
+		padding: 14px 16px;
+		border-bottom: 1px solid v.$lightGray;
+
+		&:last-of-type {
+			border-bottom: none;
+		}
+
+		&--first {
+			padding-top: 14px;
+		}
+	}
+
+	// Nagłówek sekcji (przycisk toggle)
+	&__section-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		width: 100%;
+		padding: 0;
+		margin: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-align: left;
+
+		svg {
+			flex-shrink: 0;
+			color: v.$gray;
+            width: 1.2rem;
+            height: 1.2rem;
+			transition: transform 0.2s ease;
+
+			&.is-open {
+				transform: rotate(180deg);
+			}
+		}
+	}
+
+	&__section-title {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 1rem;
+		font-weight: 700;
+		color: v.$black;
+	}
+
+	// Licznik aktywnych filtrów w tytule
+	&__badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background-color: v.$orange;
+		color: v.$white;
+		font-size: 0.75rem;
+		font-weight: 700;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	// Lista marek
+	&__list {
+		list-style: none;
+		padding: 0;
+		margin: 10px 0 2px;
+	}
+
+	&__label {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 0;
+		cursor: pointer;
+
+		&:hover .shop-filters__label-text {
+			color: v.$orange;
+		}
+	}
+
+	&__checkbox {
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+        margin-left: 0;
+		accent-color: v.$orange;
+		cursor: pointer;
+	}
+
+	&__label-text {
+		flex: 1;
+		font-size: 0.9rem;
+		color: v.$black;
+		transition: color 0.15s;
+	}
+
+	&__count {
+		font-size: 0.7rem;
+        line-height: 1;
+        font-weight: 600;
+        background-color: v.$whiteOrange;
+        width: 18px;
+        border: 1px solid v.$orange;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+		color: v.$orange;
+	}
+
+	// Filtr ceny
+	&__price-wrap {
+		margin-top: 12px;
+	}
+
+	&__price-row {
+		display: flex;
+		align-items: flex-end;
+		gap: 6px;
+	}
+
+	&__price-field {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__price-label {
+		display: block;
+		font-size: 0.72rem;
+		color: v.$gray;
+		margin-bottom: 4px;
+	}
+
+	&__price-input-wrap {
+		position: relative;
+	}
+
+	&__currency {
+		position: absolute;
+		left: 8px;
+		top: 50%;
+		transform: translateY(-50%);
+		font-size: 0.8rem;
+		color: v.$gray;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	&__price-input {
+		width: 100%;
+		padding: 7px 8px 7px 26px;
+		border: 1px solid v.$lightGray;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		color: v.$black;
+		background: v.$white;
+		outline: none;
+		transition: border-color 0.15s;
+
+		&:focus {
+			border-color: v.$orange;
+		}
+
+		// Ukryj strzałki number input
+		-moz-appearance: textfield;
+		appearance: textfield;
+
+		&::-webkit-inner-spin-button,
+		&::-webkit-outer-spin-button {
+			-webkit-appearance: none;
+			appearance: none;
+			margin: 0;
+		}
+	}
+
+	&__price-dash {
+		flex-shrink: 0;
+		padding-bottom: 9px;
+		font-size: 0.875rem;
+		color: v.$gray;
+	}
+
+	&__price-btn {
+		width: 100%;
+		margin-top: 10px;
+		padding: 9px 16px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: v.$white;
+		background-color: v.$orange;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: opacity 0.15s;
+
+		&:hover {
+			opacity: 0.88;
+		}
+	}
+
+	// Link "Wyczyść filtry"
+	&__reset {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		padding: 10px 16px 14px;
+		font-size: 0.8rem;
+		color: v.$gray;
+		text-decoration: none;
+		transition: color 0.15s;
+
+		&:hover {
+			color: v.$orange;
+		}
+	}
+}
+
+
+// Sidebar sklepu
+.shop-sidebar {
+	&__widget {
+		border: 1px solid v.$lightGray;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	&__widget-title {
+		font-size: 0.95rem;
+		font-weight: 700;
+		color: v.$black;
+		margin: 0 0 16px;
+		padding-bottom: 12px;
+		border-bottom: 2px solid v.$lightGray;
+	}
+
+	&__empty {
+		color: v.$gray;
+		font-size: 0.85rem;
+		padding: 16px;
+		border: 1px dashed v.$lightGray;
+		border-radius: 10px;
+		text-align: center;
+	}
+}
+
+// -------------------------------------------------------
+// Siatka produktów
+// -------------------------------------------------------
+ul.products {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 8px;
+
+	@media (max-width: 900px) {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	@media (max-width: 560px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+// Gdy produkty są wewnątrz layoutu z sidebarem — 3 kolumny mogą być ciasne
+.shop-layout__content ul.products {
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 560px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+
+// -------------------------------------------------------
+// Karta produktu — BEM .product-card
+// -------------------------------------------------------
+
+// Bazowe style pozycji li (WC dodaje klasy .type-product, .product itp.)
+ul.products li.product,
+.product-card {
+	position: relative;
+	background-color: v.$white;
+	border: 1px solid v.$lightGray;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	transition: box-shadow 0.25s ease, transform 0.25s ease;
+
+	&:hover {
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+		transform: translateY(-2px);
+	}
+}
+
+.product-card {
+	.added_to_cart {
+		display: none;
+	}
+
+	&__badge {
+		position: absolute;
+		top: 12px;
+		left: 12px;
+		z-index: 1;
+		background-color: v.$orange;
+		color: v.$white;
+		font-size: 0.72rem;
+		font-weight: 700;
+		padding: 4px 10px;
+		border-radius: 4px;
+		pointer-events: none;
+		line-height: 1;
+	}
+
+	&__img-link {
+		display: block;
+		overflow: hidden;
+		background-color: v.$whiteGray;
+		flex-shrink: 0;
+	}
+
+	&__img {
+		width: 100%;
+		aspect-ratio: 1;
+		object-fit: cover;
+		display: block;
+		transition: transform 0.35s ease;
+
+		.product-card:hover & {
+			transform: scale(1.04);
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		padding: 12px 16px 16px;
+		gap: 10px;
+
+        .product-card:hover & {
+			background-color: v.$whiteOrange;
+		}
+	}
+
+	&__title-link {
+		display: block;
+		text-decoration: none;
+		flex: 1;
+	}
+
+	&__title {
+		font-size: 0.88rem;
+		font-weight: 500;
+		color: v.$black;
+		line-height: 1.45;
+		margin: 0;
+		transition: color 0.2s ease;
+	}
+
+	&__footer {
+		display: flex;
+        align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-top: auto;
+	}
+
+	&__price-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		flex: 1;
+		min-width: 0;
+
+		.price {
+			font-size: 1.1rem;
+			font-weight: 700;
+			color: v.$orange;
+			line-height: 1;
+			padding: 0;
+			margin: 0;
+
+			del {
+				color: v.$lightGray;
+				font-size: 0.82rem;
+				font-weight: 400;
+				margin-right: 4px;
+			}
+
+			ins {
+				text-decoration: none;
+			}
+		}
+
+		.last30-days-price {
+			font-size: 0.68rem;
+			color: v.$gray;
+			line-height: 1.3;
+		}
+	}
+
+	&__cart-btn {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+        aspect-ratio: 1;
+		background-color: v.$orange;
+		border: none;
+		cursor: pointer;
+		transition: background-color 0.2s ease, transform 0.15s ease;
+		text-decoration: none;
+
+		svg {
+			width: 20px;
+			height: 20px;
+			fill: v.$white;
+			pointer-events: none;
+			flex-shrink: 0;
+		}
+
+		&:hover {
+			background-color: v.$darkOrange;
+		}
+
+		&.loading {
+			opacity: 0.7;
+			cursor: wait;
+			transform: scale(0.95);
+		}
+
+		&.added,
+		&.added_to_cart {
+			background-color: v.$darkOrange;
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Paginacja
+// -------------------------------------------------------
+.woocommerce-pagination {
+	display: flex;
+	justify-content: center;
+	margin-top: 48px;
+
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		gap: 8px;
+	}
+
+	li {
+		a,
+		span {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 40px;
+			height: 40px;
+			border: 1px solid v.$lightGray;
+			border-radius: 6px;
+			font-size: 0.875rem;
+			font-weight: 600;
+			color: v.$black;
+			transition: all 0.2s ease;
+
+			&:hover,
+			&.current {
+				background-color: v.$orange;
+				border-color: v.$orange;
+				color: v.$white;
+			}
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Category Tree — sidebar nawigacja po kategoriach
+// -------------------------------------------------------
+
+.cat-tree {
+    // Bez dodatkowego wrappera — wchodzi bezpośrednio
+    // w .shop-sidebar__widget (border, padding, radius są tam)
+    
+}
+
+// ─── Listy ──────────────────────────────────────────────
+
+.cat-tree__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+// Wcięcia kolejnych poziomów
+.cat-tree__list--depth-1 .cat-tree__row { padding-left: 2rem; }
+.cat-tree__list--depth-2 .cat-tree__row { padding-left: 3rem; }
+.cat-tree__list--depth-3 .cat-tree__row { padding-left: 4rem; }
+
+// ─── Item ───────────────────────────────────────────────
+
+.cat-tree__item {
+    border-bottom: 1px solid v.$lightGray;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+// ─── Row ────────────────────────────────────────────────
+
+.cat-tree__row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    transition: background-color 0.18s ease;
+
+    // Aktywna kategoria
+    &.is-active .cat-tree__link {
+        color: v.$orange;
+        font-weight: 600;
+    }
+
+    // Kategoria nadrzędna aktywnej
+    &.is-ancestor .cat-tree__link {
+        color: v.$orange;
+    }
+}
+
+// ─── Link ────────────────────────────────────────────────
+
+.cat-tree__link {
+    flex: 1;
+    color: v.$black;
+    text-decoration: none;
+    font-size: 1rem;
+    line-height: 1.4;
+    font-weight: 600;
+    transition: color 0.18s ease;
+
+    &:hover {
+        color: v.$orange;
+        text-decoration: none;
+    }
+}
+
+// Podpoziomy — lżejszy font weight
+.cat-tree__list--depth-1,
+.cat-tree__list--depth-2,
+.cat-tree__list--depth-3 {
+    .cat-tree__link {
+        font-weight: 300;
+        font-size: 0.9rem;
+    }
+}
+
+// ─── Chevron ────────────────────────────────────────────
+
+.cat-tree__chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: auto;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: v.$gray;
+    border-radius: 4px;
+    margin-right: -0.25rem;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease;
+
+    &:hover {
+        background-color: v.$whiteOrange;
+        color: v.$orange;
+    }
+
+    svg {
+        width: 1.2rem;
+        height: 1.2rem;
+        pointer-events: none;
+        transition: transform 0.18s ease;
+    }
+}
+
+// Obrót chevron gdy open
+.cat-tree__item.is-open > .cat-tree__row .cat-tree__chevron svg {
+    transform: rotate(180deg);
+}
+
+// ─── Children (x-collapse animuje height) ───────────────
+
+.cat-tree__children {
+    // Lekkie tło dla podpoziomów
+    // background-color: v.$whiteOrange;
+    border-top: 1px solid v.$lightGray;
+
+    // Ostatni item w podliście — bez dolnego bordera
+    .cat-tree__item:last-child {
+        border-bottom: none;
+    }
+}

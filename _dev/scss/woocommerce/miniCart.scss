@@ -1,0 +1,282 @@
+@use '../base/values.scss' as v;
+@use '../base/mixins.scss' as m;
+
+// -------------------------------------------------------
+// MiniCart – panel boczny wysuwany z lewej
+// -------------------------------------------------------
+.minicart {
+	position: fixed;
+	top: 0;
+	right: 0;
+	width: 500px;
+	max-width: 85vw;
+	height: 100%;
+	background: v.$white;
+	z-index: 1100;
+	transform: translateX(100%);
+	transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	display: flex;
+	flex-direction: column;
+	box-shadow: 6px 0 32px rgba(0, 0, 0, 0.14);
+
+	&.is-open {
+		transform: translateX(0);
+	}
+
+	// ── Nagłówek panelu ──────────────────────────────────
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 20px 24px;
+		border-bottom: 1px solid v.$lightGray;
+		flex-shrink: 0;
+	}
+
+	&__title {
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: v.$black;
+		margin: 0;
+	}
+
+	&__close {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border: none;
+		background: none;
+		cursor: pointer;
+		border-radius: 6px;
+		color: v.$black;
+		transition: background-color 0.2s;
+
+		&:hover {
+			background-color: v.$lightGray;
+		}
+	}
+
+	// ── Treść (items + footer) ───────────────────────────
+	&__content {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		overflow: hidden;
+	}
+
+	// ── Ciało – lista produktów ──────────────────────────
+	&__body {
+		flex: 1;
+		overflow-y: auto;
+		padding: 16px 24px;
+		scrollbar-width: thin;
+		scrollbar-color: v.$lightGray transparent;
+
+		&::-webkit-scrollbar {
+			width: 4px;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background-color: v.$lightGray;
+			border-radius: 4px;
+		}
+	}
+
+	&__empty {
+		color: v.$black;
+		opacity: 0.5;
+		font-size: 0.9rem;
+		text-align: center;
+		padding: 32px 0;
+	}
+
+	&__list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	// ── Pojedynczy produkt ───────────────────────────────
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid v.$lightGray;
+		transition: opacity 0.2s ease, transform 0.2s ease;
+
+		&:last-child {
+			border-bottom: none;
+			padding-bottom: 0;
+		}
+
+		&--removing {
+			opacity: 0;
+			transform: translateX(16px);
+			pointer-events: none;
+		}
+	}
+
+	&__item-img {
+		flex-shrink: 0;
+		width: 70px;
+		height: 70px;
+		border-radius: 8px;
+		overflow: hidden;
+		border: 1px solid v.$lightGray;
+		display: block;
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+		}
+	}
+
+	&__item-details {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	&__item-name {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: v.$black;
+		text-decoration: none;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		line-height: 1.35;
+		transition: color 0.2s;
+
+		&:hover {
+			color: v.$orange;
+		}
+	}
+
+	&__item-meta {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 0.8rem;
+		color: v.$black;
+		opacity: 0.7;
+	}
+
+	&__item-price {
+		font-weight: 600;
+		opacity: 1;
+	}
+
+	&__item-remove {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		color: v.$black;
+		opacity: 0.4;
+		transition: opacity 0.2s, background-color 0.2s;
+
+		&:hover {
+			opacity: 1;
+			background-color: #fef2f2;
+			color: #ef4444;
+		}
+	}
+
+	// ── Stopka – suma + przyciski ────────────────────────
+	&__footer {
+		padding: 20px 24px;
+		border-top: 1px solid v.$lightGray;
+		flex-shrink: 0;
+		background: v.$white;
+	}
+
+	&__total {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 1rem;
+		color: v.$black;
+		margin-bottom: 16px;
+
+		strong {
+			font-size: 1.15rem;
+			font-weight: 700;
+			color: v.$orange;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	&__btn {
+		display: block;
+		text-align: center;
+		padding: 12px 24px;
+		font-weight: 600;
+		text-decoration: none;
+		transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+		cursor: pointer;
+
+		&--primary {
+			background-color: v.$orange;
+			color: v.$white;
+			border: 2px solid v.$orange;
+
+			&:hover {
+				background-color: v.$darkOrange;
+				border-color: v.$darkOrange;
+			}
+		}
+
+		&--outline {
+			background-color: transparent;
+			color: v.$black;
+			border: 2px solid v.$lightGray;
+
+			&:hover {
+				border-color: v.$orange;
+				color: v.$orange;
+			}
+		}
+	}
+}
+
+// Backdrop (tło za panelem)
+.minicart__backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.45);
+	z-index: 1099;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.35s ease;
+
+	&.is-visible {
+		opacity: 1;
+		pointer-events: all;
+	}
+}
+
+// Blokada przewijania strony gdy minicart jest otwarty
+body.minicart-is-open {
+	overflow: hidden;
+}
+
