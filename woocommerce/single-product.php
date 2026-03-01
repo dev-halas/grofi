@@ -22,8 +22,7 @@ while (have_posts()) :
 ?>
 
 <div class="woocommerceMain container">
-
-	<?php woocommerce_breadcrumb(); ?>
+  <?php woocommerce_breadcrumb(); ?>
 	<?php woocommerce_output_all_notices(); ?>
 
 	<div id="product-<?php the_ID(); ?>" <?php wc_product_class('product', $product); ?>>

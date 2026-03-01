@@ -25,7 +25,7 @@ const GROFI_CAT_ICON_NONCE = 'grofi_save_cat_icon';
  * Can be overridden before this file is loaded (e.g. in functions.php or child theme).
  */
 if ( ! defined( 'GROFI_DEFAULT_CAT_ICON_URL' ) ) {
-	define( 'GROFI_DEFAULT_CAT_ICON_URL', 'http://localhost:8888/grofi/wp-content/uploads/2026/02/Union.svg' );
+	define( 'GROFI_DEFAULT_CAT_ICON_URL', '' );
 }
 
 

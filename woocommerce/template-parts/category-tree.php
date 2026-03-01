@@ -3,7 +3,7 @@
  * Template Part: Sidebar — Category Tree
  *
  * Użycie w sidebar.php lub innym template:
- * get_template_part( 'template-parts/sidebar/category-tree' );
+ * get_template_part( 'woocommerce/template-parts/category-tree' );
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,9 +19,8 @@ if ( empty( $cat_tree ) ) {
 }
 ?>
 
+<h3 class="shop-sidebar__title">Kategorie produktów</h3>
 <nav class="cat-tree shop-sidebar__widget"
      aria-label="<?php esc_attr_e( 'Kategorie produktów', 'grofi' ); ?>">
-
     <?php theme_render_cat_tree( $cat_tree, $active_ids, 0 ); ?>
-
 </nav>

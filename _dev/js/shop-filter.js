@@ -22,6 +22,7 @@
 		catTree:    '.cat-tree',
 		filters:    '#shop-filters',
 		breadcrumb: '.woocommerce-breadcrumb',
+		title:      '.shop-layout__title',
 	};
 
 	/** Wersja nawigacji — odrzuca odpowiedzi zdezaktualizowanych requestów */
@@ -145,6 +146,7 @@
 		swapEl(SEL.catTree,    doc);
 		swapEl(SEL.filters,    doc);
 		swapEl(SEL.breadcrumb, doc);
+		swapEl(SEL.title,      doc);
 
 		document.title = doc.title;
 		history.pushState({ shopUrl: url }, doc.title, url);
@@ -264,6 +266,15 @@
 		if (checkbox) {
 			const form = checkbox.closest('form');
 			if (form) applyFilters(form);
+			return;
+		}
+
+		// Selekty toolbara (sortowanie, liczba produktów) → nawigacja AJAX po URL z value
+		const toolbarSelect = e.target.closest('select[data-ajax-nav]');
+		if (toolbarSelect && toolbarSelect.value) {
+			// Rozwiąż URL względem bieżącej strony — add_query_arg() zwraca ścieżkę względną
+			const resolvedUrl = new URL(toolbarSelect.value, window.location.href).href;
+			navigate(resolvedUrl);
 		}
 	}
 

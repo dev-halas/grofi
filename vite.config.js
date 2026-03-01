@@ -5,6 +5,7 @@ const JS_FILE = resolve('_dev/app.js');
 const BUILD_DIR = resolve(__dirname, 'dist');
 
 export default defineConfig({
+  base: './',
   build: {
     assetsDir: '_dev/assets',
     emptyOutDir: true,

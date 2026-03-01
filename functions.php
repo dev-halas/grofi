@@ -68,7 +68,8 @@
 
 
 	add_filter( 'dgwt/wcas/form/magnifier_ico', function () {
-		return file_get_contents( THEME_URL . '_dev/assets/icons/search.svg' );
+		$path = THEME_DIR . '_dev/assets/icons/search.svg';
+		return file_exists( $path ) ? file_get_contents( $path ) : '';
 	});
 
 
