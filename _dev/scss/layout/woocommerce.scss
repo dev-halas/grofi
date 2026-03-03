@@ -298,78 +298,6 @@
 	}
 }
 
-
-// -------------------------------------------------------
-// Zamówienie / Checkout
-// -------------------------------------------------------
-.woocommerce-checkout {
-	.woocommerce {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 40px;
-		align-items: start;
-
-		@media (max-width: 768px) {
-			grid-template-columns: 1fr;
-		}
-	}
-
-	h3 {
-		font-size: 1.2rem;
-		font-weight: 700;
-		margin-bottom: 20px;
-		padding-bottom: 8px;
-		border-bottom: 2px solid v.$lightGray;
-	}
-
-	.form-row {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		margin-bottom: 16px;
-
-		label {
-			font-size: 0.85rem;
-			font-weight: 600;
-		}
-
-		input,
-		textarea,
-		select {
-			border: 1px solid v.$lightGray;
-			border-radius: 6px;
-			padding: 10px 14px;
-			font-size: 0.9rem;
-			outline: none;
-			transition: border-color 0.2s ease;
-			width: 100%;
-			box-sizing: border-box;
-
-			&:focus {
-				border-color: v.$orange;
-			}
-		}
-	}
-
-	#place_order {
-		background-color: v.$orange;
-		color: v.$white;
-		border: none;
-		border-radius: 8px;
-		padding: 14px 28px;
-		font-size: 1rem;
-		font-weight: 700;
-		cursor: pointer;
-		width: 100%;
-		transition: background-color 0.2s ease;
-
-		&:hover {
-			background-color: v.$darkOrange;
-		}
-	}
-}
-
-
 // -------------------------------------------------------
 // Powiadomienia WooCommerce
 // -------------------------------------------------------
@@ -427,4 +355,19 @@
 // Fancybox – zmniejszone tło
 .fancybox__backdrop {
 	--fancybox-bg: rgba(0, 0, 0, 0.6);
+}
+
+.woocommerce-no-products-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10vh 0;
+  border-right: 1px solid v.$lightGray;
+  border-bottom: 1px solid v.$lightGray;
+
+  .button {
+    margin-top: 24px;
+  }
 }

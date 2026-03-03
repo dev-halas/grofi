@@ -1,0 +1,1113 @@
+@use '../base/values.scss' as v;
+@use '../base/mixins.scss' as m;
+
+// -------------------------------------------------------
+// Alpine.js – ukryj elementy do momentu inicjalizacji
+// -------------------------------------------------------
+[x-cloak] { display: none !important; }
+
+// -------------------------------------------------------
+// Ukryj domyślny tytuł page.php na stronie checkoutu
+// -------------------------------------------------------
+body.woocommerce-checkout {
+	> h1:first-of-type:empty {
+		display: none;
+	}
+}
+
+// -------------------------------------------------------
+// Dwukolumnowy layout (lewo: formularz | prawo: podsumowanie)
+// -------------------------------------------------------
+.checkout-layout {
+	display: grid;
+	grid-template-columns: 1fr 420px;
+	gap: 28px;
+	align-items: start;
+
+	@include m.responsive('tablet') {
+		grid-template-columns: 1fr;
+	}
+
+	&__main {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	&__sidebar {
+		position: sticky;
+		top: 24px;
+
+		@include m.responsive('tablet') {
+			position: static;
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Strona checkoutu – wrapper
+// -------------------------------------------------------
+.checkout-page {
+	padding-block: 40px;
+
+	&__title {
+		font-size: 1.75rem;
+		font-weight: 700;
+		margin-bottom: 28px;
+		margin-top: 8px;
+	}
+}
+
+// -------------------------------------------------------
+// Karty sekcji
+// -------------------------------------------------------
+.checkout-card {
+	background: v.$white;
+	border: 1px solid v.$lightGray;
+	padding: 24px 28px;
+
+	@include m.responsive('mobile') {
+		padding: 16px;
+	}
+
+	&--summary {
+		padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+	}
+
+	&--payment {
+		padding-bottom: 20px;
+	}
+}
+
+// -------------------------------------------------------
+// Nagłówki sekcji z numerami kroków
+// -------------------------------------------------------
+.checkout-section__title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 1.5rem;
+	font-weight: 700;
+	margin-bottom: 20px;
+	padding-bottom: 14px;
+	border-bottom: 1px solid v.$lightGray;
+
+	&--summary {
+		border-bottom: none;
+		padding-bottom: 0;
+    margin-bottom: 0;
+	}
+}
+
+.checkout-section__step {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background-color: v.$orange;
+	color: v.$white;
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.checkout-section__label {
+	font-weight: 600;
+	margin-top: 4px;
+
+	&--alt {
+		margin-top: 20px;
+		padding-top: 16px;
+		border-top: 1px solid v.$lightGray;
+	}
+}
+
+.checkout-section__login-link {
+	margin-left: auto;
+	font-weight: 500;
+	color: v.$orange;
+	text-decoration: underline;
+	white-space: nowrap;
+
+	&:hover {
+		color: v.$darkOrange;
+	}
+}
+
+// -------------------------------------------------------
+// Sekcja 1: Dane kontaktowe
+// -------------------------------------------------------
+.checkout-guest-note {
+	color: v.$gray;
+
+	&--logged {
+		margin-top: 10px;
+		margin-bottom: 0;
+	}
+}
+
+.checkout-contact-fields {
+	.form-row {
+		margin-bottom: 0;
+	}
+}
+
+.checkout-create-account {
+	margin-bottom: 0 !important;
+}
+
+// -------------------------------------------------------
+// Sekcja 2: Adres + checkbox "ten sam adres"
+// -------------------------------------------------------
+.checkout-same-address {
+	margin-top: 16px;
+	padding-top: 14px;
+	border-top: 1px solid v.$lightGray;
+
+	.woocommerce-form__label-for-checkbox {
+		display: flex !important;
+		align-items: center;
+		gap: 8px;
+		font-weight: 500;
+		cursor: pointer;
+		margin-bottom: 0;
+
+		input[type='checkbox'] {
+			width: 15px;
+			height: 15px;
+			accent-color: v.$orange;
+			flex-shrink: 0;
+			cursor: pointer;
+		}
+	}
+}
+
+.checkout-shipping-address-extra {
+	border-top: 1px solid v.$lightGray;
+	padding-top: 16px;
+	margin-top: 4px;
+}
+
+// -------------------------------------------------------
+// Pola formularzy – billing / shipping
+// -------------------------------------------------------
+.woocommerce-billing-fields,
+.woocommerce-shipping-fields,
+.checkout-contact-fields {
+
+	h3 {
+		display: none;
+	}
+
+	&__field-wrapper {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 16px;
+
+		@include m.responsive('mobile') {
+			grid-template-columns: 1fr;
+		}
+
+		.form-row-wide,
+		.form-row-last:only-child {
+			grid-column: span 2;
+
+			@include m.responsive('mobile') {
+				grid-column: span 1;
+			}
+		}
+	}
+}
+
+.woocommerce-additional-fields {
+	margin-top: 8px;
+}
+
+// -------------------------------------------------------
+// Pole formularza WooCommerce — Floating Label
+//
+// Struktura renderowana przez WC:
+//   p.form-row
+//     label
+//     span.woocommerce-input-wrapper
+//       input / select / textarea
+//
+// Mechanizm:
+//   - helper PHP ustawia placeholder=" " (spacja)
+//   - :placeholder-shown = pole puste → label w pozycji "inside"
+//   - :not(:placeholder-shown) lub :focus → label unosi się na górę
+//   - CSS :has() obsługuje to bez JS
+// -------------------------------------------------------
+.form-row {
+	position: relative;
+	margin-bottom: 0;
+
+	// ── Floating label ──────────────────────────────────
+	> label:not(.woocommerce-form__label-for-checkbox) {
+		position: absolute;
+		left: 12px;
+		top: 50%;
+		transform: translateY(-50%);
+		pointer-events: none;
+		z-index: 1;
+		line-height: 1;
+		transition:
+			top       0.15s ease,
+			font-size 0.15s ease,
+			color     0.15s ease;
+
+		.required {
+			color: v.$orange;
+			margin-left: 2px;
+		}
+
+		.optional {
+			display: none;
+		}
+	}
+
+	// ── Stan uniesiony: wypełnione / focus / select ─────
+	&:has(.input-text:not(:placeholder-shown)) > label:not(.woocommerce-form__label-for-checkbox),
+	&:has(textarea:not(:placeholder-shown))    > label:not(.woocommerce-form__label-for-checkbox),
+	&:has(.input-text:focus)                   > label:not(.woocommerce-form__label-for-checkbox),
+	&:has(textarea:focus)                      > label:not(.woocommerce-form__label-for-checkbox),
+	&:has(select)                              > label:not(.woocommerce-form__label-for-checkbox) {
+		top: 14px;
+		font-size: 0.8rem;
+		font-weight: 300;
+	}
+
+	.woocommerce-input-wrapper {
+		display: block;
+	}
+
+	input[type='text'],
+	input[type='email'],
+	input[type='tel'],
+	input[type='number'],
+	input[type='password'],
+	select,
+	textarea {
+		width: 100%;
+		height: 3.2rem;
+		padding: 16px 12px 2px;
+		border: 1px solid v.$black;
+		background-color: v.$white;
+		border-radius: 4px;
+		outline: none;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+		&:focus {
+			border-color: v.$orange;
+			box-shadow: 0 0 0 3px rgba(243, 143, 28, 0.12);
+		}
+
+		&::placeholder {
+			color: transparent;
+		}
+	}
+
+	select {
+		padding-top: 16px;
+		padding-bottom: 16px;
+		padding-right: 36px;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b3b3b3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 14px center;
+		cursor: pointer;
+		appearance: none;
+	}
+
+	textarea {
+		height: auto;
+		resize: vertical;
+		min-height: 90px;
+		margin-bottom: 0;
+	}
+
+	&.woocommerce-invalid {
+		input, select, textarea {
+			border-color: #e53935;
+		}
+	}
+}
+
+.woocommerce-form__label-for-checkbox {
+	display: flex !important;
+	align-items: center;
+	gap: 8px;
+	font-weight: 500;
+	cursor: pointer;
+	margin-bottom: 0;
+
+	input[type='checkbox'] {
+		width: 15px;
+		height: 15px;
+		flex-shrink: 0;
+		accent-color: v.$black;
+		cursor: pointer;
+	}
+}
+
+// -------------------------------------------------------
+// Sekcja 3: Opcje wysyłki
+// -------------------------------------------------------
+.checkout-shipping-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.checkout-shipping-item {
+	border: 1px solid v.$lightGray;
+	background: v.$whiteGray;
+	transition: border-color 0.15s ease, background 0.15s ease;
+	cursor: pointer;
+
+	&--selected {
+		border-color: v.$orange;
+	}
+
+	&__label {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 14px;
+		cursor: pointer;
+		width: 100%;
+
+		input[type='radio'] {
+			accent-color: v.$black;
+			width: 1.2rem;
+			height: 1.2rem;
+			flex-shrink: 0;
+			cursor: pointer;
+			margin: 0;
+		}
+	}
+
+	&__logo {
+		height: 18px;
+		width: auto;
+		flex-shrink: 0;
+	}
+
+	&__content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__name {
+		font-weight: 500;
+		line-height: 1.3;
+	}
+
+	&__desc {
+		font-size: 0.76rem;
+		color: v.$gray;
+		display: block;
+	}
+
+	&__price {
+		font-weight: 600;
+		white-space: nowrap;
+		flex-shrink: 0;
+		margin-left: auto;
+
+		strong {
+			font-size: 0.8rem;
+			color: #43a047;
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Sekcja 4: Opcje płatności
+// -------------------------------------------------------
+.wc_payment_methods {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+
+	li {
+		border: 1px solid v.$lightGray;
+		background: v.$whiteGray;
+		cursor: pointer;
+
+		&.payment_method_selected,
+		&:has(input[type='radio']:checked) {
+			border-color: v.$orange;
+		}
+	}
+}
+
+.payment-method__header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+
+	label {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-weight: 500;
+		cursor: pointer;
+		flex: 1;
+		margin-bottom: 0;
+
+		img {
+			height: 20px;
+			width: auto;
+		}
+	}
+
+	input[type='radio'] {
+		accent-color: v.$black;
+		width: 1.1rem;
+		height: 1.1rem;
+		flex-shrink: 0;
+		margin: 0;
+		cursor: pointer;
+	}
+}
+
+.payment_box {
+	padding: 10px 14px 14px;
+	font-size: 0.8rem;
+	border-top: 1px solid v.$lightGray;
+
+	p {
+		margin: 0;
+	}
+}
+
+// -------------------------------------------------------
+// Notatka do zamówienia (Alpine toggle)
+// -------------------------------------------------------
+.checkout-note {
+	background: v.$white;
+	padding: 0 4px;
+
+	&__toggle {
+		display: flex !important;
+		align-items: center;
+		gap: 10px;
+		padding: 14px 0;
+		font-weight: 500;
+		cursor: pointer;
+		margin-bottom: 0;
+
+		input[type='checkbox'] {
+			width: 15px;
+			height: 15px;
+			accent-color: v.$orange;
+			flex-shrink: 0;
+		}
+	}
+
+	&__body {
+		padding-top: 12px;
+
+		textarea {
+			margin-bottom: 0;
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Footer checkoutu: regulamin + przycisk
+// -------------------------------------------------------
+.checkout-footer {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-top: 4px;
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding-top: 4px;
+
+		@include m.responsive('mobile') {
+			flex-direction: column;
+			align-items: stretch;
+		}
+	}
+}
+
+.checkout-back-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 500;
+	color: v.$gray;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: color 0.15s ease;
+
+	svg {
+		flex-shrink: 0;
+		transition: transform 0.15s ease;
+	}
+
+	&:hover {
+		color: v.$black;
+
+		svg {
+			transform: translateX(-3px);
+		}
+	}
+
+	@include m.responsive('mobile') {
+		justify-content: center;
+	}
+}
+
+.checkout-submit {
+	&:disabled,
+	&[disabled] {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	@include m.responsive('mobile') {
+		width: 100%;
+	}
+}
+
+// -------------------------------------------------------
+// Zgoda na regulamin
+// -------------------------------------------------------
+.woocommerce-terms-and-conditions-wrapper {
+	font-size: 0.8rem;
+
+	label {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		cursor: pointer;
+		line-height: 1.5;
+
+		input[type='checkbox'] {
+			margin-top: 2px;
+			accent-color: v.$orange;
+			width: 15px;
+			height: 15px;
+			flex-shrink: 0;
+		}
+	}
+
+	a {
+		color: v.$orange;
+		text-decoration: underline;
+
+		&:hover {
+			color: v.$darkOrange;
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Sidebar: podsumowanie zamówienia
+// -------------------------------------------------------
+.checkout-review {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+	&__items {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	&__item-img {
+		position: relative;
+		flex-shrink: 0;
+		width: 52px;
+		height: 52px;
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			border: 1px solid v.$lightGray;
+		}
+	}
+
+	&__item-qty {
+		position: absolute;
+		top: -7px;
+		right: -7px;
+		width: 18px;
+		height: 18px;
+		background: v.$orange;
+		color: v.$white;
+		border-radius: 50%;
+		font-size: 10px;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 1;
+	}
+
+	&__item-details {
+		flex: 1;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 8px;
+		min-width: 0;
+	}
+
+	&__item-name {
+		font-weight: 500;
+    font-size: 0.8rem;
+		line-height: 1.4;
+	}
+
+	&__item-price {
+		font-weight: 600;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	&__totals {
+		border-top: 1px solid v.$lightGray;
+		padding-top: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	&__row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 8px;
+    font-size: 0.9rem;
+
+		th, td {
+			background: none;
+			border: none;
+			padding: 0;
+		}
+
+		&--coupon {
+			color: #43a047;
+		}
+
+		&--shipping {
+			span:last-child {
+        color: v.$gray;
+			}
+		}
+
+		&--tax {
+			color: v.$gray;
+		}
+
+		&--total {
+			border-top: 1px solid v.$lightGray;
+			margin-top: 4px;
+			padding-top: 12px;
+			font-weight: 600;
+      color: v.$orange;
+      font-size: 1rem;
+		}
+	}
+
+	&__shipping-label {
+		color: v.$gray;
+		display: block;
+		text-align: right;
+	}
+}
+
+// -------------------------------------------------------
+// Akordeon kuponów w sidebarze
+// -------------------------------------------------------
+.checkout-coupon {
+	border-top: 1px solid v.$lightGray;
+	border-bottom: 1px solid v.$lightGray;
+
+	&__toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: 12px 0;
+		background: none;
+		border: none;
+		font-weight: 500;
+		cursor: pointer;
+		text-align: left;
+		gap: 8px;
+
+		&:hover {
+			color: v.$orange;
+		}
+	}
+
+	&__chevron {
+		transition: transform 0.3s ease;
+
+		&--open {
+			transform: rotate( 180deg );
+		}
+	}
+
+	&__body {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows 0.3s ease;
+
+		&--open {
+			grid-template-rows: 1fr;
+      padding-bottom: 14px;
+		}
+	}
+
+	&__inner {
+		overflow: hidden;
+	}
+
+	&__form {
+		display: flex;
+		gap: 8px;
+    flex-wrap: wrap;
+	}
+
+	&__input {
+		flex: 1;
+		padding: 12px 12px;
+		border: 1px solid v.$lightGray;
+		outline: none;
+		transition: border-color 0.15s ease;
+		appearance: none;
+
+		&:focus {
+			border-color: v.$orange;
+			box-shadow: 0 0 0 3px rgba(243, 143, 28, 0.12);
+		}
+	}
+
+	&__apply {
+    width: 100%;
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	&__message {
+		margin-top: 8px;
+
+		.woocommerce-message,
+		.woocommerce-error,
+		.woocommerce-info {
+			padding: 8px 12px;
+			margin: 0;
+		}
+	}
+}
+
+// -------------------------------------------------------
+// Komunikaty WooCommerce
+// -------------------------------------------------------
+.woocommerce-error,
+.woocommerce-message,
+.woocommerce-info {
+	padding: 12px 16px;
+	margin-bottom: 16px;
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+
+	li { margin: 0; }
+}
+
+.woocommerce-error {
+	background: #fff5f5;
+	border-left: 3px solid #e53935;
+	color: #c62828;
+}
+
+.woocommerce-message {
+	background: #f0fff4;
+	border-left: 3px solid #43a047;
+	color: #2e7d32;
+}
+
+.woocommerce-info {
+	background: v.$whiteOrange;
+	border-left: 3px solid v.$orange;
+}
+
+// -------------------------------------------------------
+// Formularz kuponu/logowania (nad checkoutem)
+// -------------------------------------------------------
+.woocommerce-form-login,
+.checkout_coupon {
+	background: v.$white;
+	border: 1px solid v.$lightGray;
+	padding: 20px 24px;
+	margin-bottom: 24px;
+
+	p.form-row {
+		margin-bottom: 12px;
+	}
+}
+
+// -------------------------------------------------------
+// Select2 – country/state select w checkoucie
+// Scoped do .checkout-layout żeby nie nadpisywać select2 globalnie
+// -------------------------------------------------------
+.checkout-layout {
+
+	.select2-container {
+		width: 100% !important;
+		display: block;
+	}
+
+  .select2-selection--single {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+	.select2-container--default .select2-selection--single {
+		height: auto;
+		border: 1px solid v.$black;
+		border-radius: 4px;
+		background-color: v.$white;
+		padding: 16px 12px 2px;
+		outline: none;
+
+		.select2-selection__rendered {
+			padding: 0;
+		}
+
+		.select2-selection__arrow {
+			height: 100%;
+			top: 0;
+			right: 12px;
+			width: 14px;
+
+			b {
+				display: none;
+			}
+
+			&::after {
+				content: '';
+				display: block;
+				width: 12px;
+				height: 8px;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b3b3b3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+				background-repeat: no-repeat;
+				background-position: center;
+				position: absolute;
+				top: 50%;
+				right: 0;
+				transform: translateY(-50%);
+			}
+		}
+	}
+
+	.select2-container--default.select2-container--open .select2-selection--single {
+		border-color: v.$orange;
+		box-shadow: 0 0 0 3px rgba(243, 143, 28, 0.12);
+
+		.select2-selection__arrow::after {
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f38f1c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+		}
+	}
+
+	.select2-dropdown {
+		border: 1px solid v.$orange;
+		border-radius: 0;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+		margin-top: -1px;
+	}
+
+	.select2-search--dropdown {
+		padding: 8px;
+
+		.select2-search__field {
+			width: 100%;
+			padding: 8px 12px;
+			border: 1px solid v.$lightGray;
+			border-radius: 0;
+			outline: none;
+
+			&:focus {
+				border-color: v.$orange;
+			}
+		}
+	}
+
+	.select2-results__option {
+		padding: 8px 14px;
+	}
+
+	.select2-container--default .select2-results__option--highlighted[aria-selected],
+	.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+		background-color: v.$orange;
+		color: v.$white;
+	}
+
+	.select2-container--default .select2-results__option[aria-selected='true'] {
+		background-color: v.$whiteOrange;
+		color: v.$black; // override highlighted orange
+	}
+}
+
+// -------------------------------------------------------
+// Strona "Dziękujemy" (thankyou)
+// -------------------------------------------------------
+.thankyou-page {
+	padding-block: 60px;
+	max-width: 640px;
+
+	&__card {
+		background: v.$white;
+		border: 1px solid v.$lightGray;
+		padding: 48px 40px;
+		text-align: center;
+
+		@include m.responsive('mobile') { padding: 32px 20px; }
+
+		&--success { border-top: 3px solid v.$orange; }
+		&--error   { border-top: 3px solid #e53935; }
+	}
+
+	&__icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 80px;
+		height: 80px;
+		border-radius: 50%;
+		background: v.$whiteOrange;
+		color: v.$orange;
+		margin: 0 auto 24px;
+
+		&--error { background: #fff5f5; color: #e53935; }
+	}
+
+	&__title {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 12px;
+	}
+
+	&__message,
+	&__notice {
+		color: v.$gray;
+		margin-bottom: 32px;
+	}
+
+	&__details {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 32px;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 16px;
+		text-align: left;
+
+		@include m.responsive('mobile') { grid-template-columns: 1fr; }
+
+		li {
+			background: v.$whiteGray;
+			padding: 14px 16px;
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+		}
+	}
+
+	&__details-label {
+		color: v.$gray;
+		display: block;
+	}
+
+	&__details li strong {
+		font-weight: 600;
+	}
+
+	&__actions {
+		display: flex;
+		justify-content: center;
+		gap: 12px;
+		flex-wrap: wrap;
+
+		.button { min-width: 160px; }
+	}
+}
+
+// -------------------------------------------------------
+// WooCommerce order details po thankyou
+// -------------------------------------------------------
+.woocommerce-order-details,
+.woocommerce-customer-details {
+	margin-top: 40px;
+
+	h2 {
+		font-weight: 700;
+		margin-bottom: 16px;
+	}
+
+	.woocommerce-table {
+		width: 100%;
+		border-collapse: collapse;
+
+		th, td {
+			padding: 10px 14px;
+			border-bottom: 1px solid v.$lightGray;
+			text-align: left;
+		}
+
+		thead th {
+			font-weight: 600;
+			background: v.$whiteGray;
+		}
+
+		tfoot {
+			th, td { font-weight: 600; }
+
+			.order-total .woocommerce-Price-amount {
+				color: v.$orange;
+			}
+		}
+	}
+}

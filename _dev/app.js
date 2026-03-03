@@ -10,6 +10,7 @@ import './js/swiper';
 import './js/cart';
 import './js/product-gallery';
 import './js/shop-filter';
+import './js/checkout';
 
 // Guard: don't start twice if a plugin already loaded Alpine
 if ( ! window.Alpine ) {

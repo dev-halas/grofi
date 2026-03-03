@@ -769,7 +769,7 @@ ul.products li.product,
   justify-content: flex-end;
   flex-wrap: wrap;
 	gap: 12px;
-	margin-bottom: 24px;
+	min-height: 64px;
 
 	&__select-wrap {
 		position: relative;
