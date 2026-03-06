@@ -116,7 +116,7 @@
         aspect-ratio: 1;
         padding: 8px 8px 8px 0;
         background-color: transparent;
-        
+
         path {
           fill: values.$orange;
         }
@@ -141,13 +141,13 @@
         aspect-ratio: 1;
         padding: 8px;
         background-color: transparent;
-        
+
         path {
           fill: values.$orange;
         }
       }
     }
-    
+
     .cartValue {
       @include mixins.responsive('small') {
         display: none;
@@ -199,145 +199,130 @@ body.admin-bar {
   }
 }
 
-/*
-header.is-open {
-  .hamburger svg {
-    transform: rotate(-45deg);
-  }
-
-  .line-top-bottom {
-    stroke-dasharray: 20 300;
-    stroke-dashoffset: -32.42;
-  }
-}
-
-*/
-
 // Mega menu
 $mm-col-width: 360px;
 
-
 .headerNav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: values.$white;
-    box-shadow: inset 0 0 0 1px values.$lightGray;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: values.$white;
+  box-shadow: inset 0 0 0 1px values.$lightGray;
+
+  @include mixins.responsive('small') {
+    display: none;
+  }
+
+  .ctaPipes {
+    background-color: values.$blue;
+    color: values.$white;
+    padding: 16px 32px;
+    font-weight: 600;
+    width: 248px;
+    text-align: center;
+    white-space: nowrap;
 
     @include mixins.responsive('small') {
       display: none;
     }
-
-    .ctaPipes {
-        background-color: values.$blue;
-        color: values.$white;
-        padding: 16px 32px;
-        font-weight: 600;
-        width: 248px;
-        text-align: center;
-        white-space: nowrap;
-
-        @include mixins.responsive('small') {
-          display: none;
-        }
-    }
+  }
 }
 
 // ── Top bar ────────────────────────────────────────────────
 .megaMenu {
-    flex: 1;
+  flex: 1;
 }
 
 .mm-topbar {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 // ── Top-bar items (Kategorie, Promocje Grofi, Bestsellery) ─
 .mm-item--lvl-0 {
-    position: relative;
+  position: relative;
 
-    > .mm-link {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 16px 32px;
-        font-weight: 600;
-        color: values.$black; 
-        border-right: 1px solid values.$lightGray;
-        transition: background 0.15s, color 0.15s;
+  >.mm-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    font-weight: 600;
+    color: values.$black;
+    border-right: 1px solid values.$lightGray;
+    transition: background 0.15s, color 0.15s;
 
-        &:hover {
-            background-color: values.$whiteOrange;
-            color: values.$orange;
-        }
+    &:hover {
+      background-color: values.$whiteOrange;
+      color: values.$orange;
     }
+  }
 
-    // "Kategorie" – pierwsze dziecko, ciemne tło
-    &:first-child > .mm-link {
-        background-color: values.$darkOrange;
-        color: values.$white;
-        padding: 16px 64px;
-        border-right-color: values.$darkOrange;
+  // "Kategorie" – pierwsze dziecko, ciemne tło
+  &:first-child>.mm-link {
+    background-color: values.$darkOrange;
+    color: values.$white;
+    padding: 16px 64px;
+    border-right-color: values.$darkOrange;
 
-        &:hover {
-            background-color: values.$orange;
-            color: values.$white;
-        }
+    &:hover {
+      background-color: values.$orange;
+      color: values.$white;
     }
+  }
 
-    // Aktywny (otwarty) element
-    &.is-open > .mm-link {
-        background-color: values.$orange;
-        color: values.$white;
-        border-right-color: values.$orange;
-    }
+  // Aktywny (otwarty) element
+  &.is-open>.mm-link {
+    background-color: values.$orange;
+    color: values.$white;
+    border-right-color: values.$orange;
+  }
 }
 
 // ── Wspólna baza dla wszystkich dropdownów ─────────────────
 .mm-dropdown {
-    display: none;
-    position: absolute;
-    top: 0;
-    list-style: none;
-    margin: 0;
-    background: values.$white;
-    min-width: $mm-col-width;
-    // Kaskada wysokości: LVL-2 jest absolutny wewnątrz LVL-1, więc 100% = wysokość LVL-1.
-    // LVL-3 jest absolutny wewnątrz LVL-2, więc 100% = wysokość LVL-2 = LVL-1.
-    // Gdy LVL-1 jest zawsze najwyższy, wszystkie kolumny wyrównują się do jego wysokości.
-    min-height: 100%;
-    z-index: 1000;
-    animation: mmFadeIn 0.12s ease;
+  display: none;
+  position: absolute;
+  top: 0;
+  list-style: none;
+  margin: 0;
+  background: values.$white;
+  min-width: $mm-col-width;
+  // Kaskada wysokości: LVL-2 jest absolutny wewnątrz LVL-1, więc 100% = wysokość LVL-1.
+  // LVL-3 jest absolutny wewnątrz LVL-2, więc 100% = wysokość LVL-2 = LVL-1.
+  // Gdy LVL-1 jest zawsze najwyższy, wszystkie kolumny wyrównują się do jego wysokości.
+  min-height: 100%;
+  z-index: 1000;
+  animation: mmFadeIn 0.12s ease;
 
 
-    // Strzałka "›" dla itemów z dziećmi
-    .mm-item--has-children > .mm-link::after {
-        content: '›';
-        margin-left: auto;
-        padding-left: 12px;
-        opacity: 0.5;
-        font-size: 1.1em;
-    }
+  // Strzałka "›" dla itemów z dziećmi
+  .mm-item--has-children>.mm-link::after {
+    content: '›';
+    margin-left: auto;
+    padding-left: 12px;
+    opacity: 0.5;
+    font-size: 1.1em;
+  }
 }
 
 // Pokaż dropdown gdy rodzic is-open
-.mm-item.is-open > .mm-dropdown {
-    padding: 16px 0;
-    display: block;
-    border-right: 1px solid values.$lightGray;
-    border-bottom: 1px solid values.$lightGray;
+.mm-item.is-open>.mm-dropdown {
+  padding: 16px 0;
+  display: block;
+  border-right: 1px solid values.$lightGray;
+  border-bottom: 1px solid values.$lightGray;
 }
 
 // LVL-1 – opada w dół z top-bara; overflow-y: auto zapewnia scroll
 .mm-lvl-1 {
-    top: 100%;
-    left: 0;
-    max-height: calc(96vh - 160px);
-    overflow-y: auto;
-    border-left: 1px solid values.$lightGray;
+  top: 100%;
+  left: 0;
+  max-height: calc(96vh - 160px);
+  overflow-y: auto;
+  border-left: 1px solid values.$lightGray;
 }
 
 // LVL-2 i LVL-3 – JS nadpisuje position:fixed + top/left/maxHeight przez getBoundingClientRect(),
@@ -345,52 +330,61 @@ $mm-col-width: 360px;
 // Poniższe top/left to fallback gdy JS nie działa.
 .mm-lvl-2,
 .mm-lvl-3 {
-    top: 1px;
-    left: 100%;
-    overflow-y: auto;
+  top: 1px;
+  left: 100%;
+  overflow-y: auto;
 }
 
 
 // ── Ikona przy kategorii (lvl-1) ───────────────────────────
 .mm-cat-icon {
-    width: 15px;
-    height: 15px;
-    object-fit: contain;
-    margin-right: 8px;
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  margin-right: 8px;
 }
 
 // ── Linki wewnątrz dropdownów ─────────────────────────────
 .mm-item--lvl-1,
 .mm-item--lvl-2,
 .mm-item--lvl-3 {
-    > .mm-link {
-        display: flex;
-        align-items: center;
-        padding: 8px 18px;
-        font-weight: 600;
-        color: values.$black;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: background 0.12s, color 0.12s;
+  >.mm-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 18px;
+    font-weight: 600;
+    color: values.$black;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s;
 
-        &:hover {
-            background-color: values.$whiteOrange;
-            color: values.$orange;
-        }
+    &:hover {
+      background-color: values.$whiteOrange;
+      color: values.$orange;
     }
+  }
 
-    &.is-open > .mm-link {
-        background-color: values.$whiteOrange;
-        color: values.$orange;
+  &.is-open>.mm-link {
+    background-color: values.$whiteOrange;
+    color: values.$orange;
 
-        &::after { opacity: 1; }
+    &::after {
+      opacity: 1;
     }
+  }
 }
 
 // ── Animacja ──────────────────────────────────────────────
 @keyframes mmFadeIn {
-    from { opacity: 0; transform: translateX(-3px); }
-    to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 
@@ -533,9 +527,7 @@ ul.mobile-menu-list {
   padding: 16px 0;
 }
 
-.mobile-menu-item {
-  
-}
+.mobile-menu-item {}
 
 .mobile-menu-item-row {
   display: flex;

@@ -13,6 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/** Slugi i nazwy kategorii (lowercase) pomijane w drzewie bocznym. */
+const GROFI_CAT_TREE_EXCLUDED = [ 'uncategorized', 'bez-kategorii', 'bez kategorii' ];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Publiczne API — sygnatura niezmieniona (category-tree.php woła to z depth=0)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,7 +45,7 @@ function theme_get_product_cat_tree( int $parent_id = 0, int $depth = 0, int $ma
 
 	// ── Cache ─────────────────────────────────────────────────────────────
 	// Klucz versjonowany — zmień sufiks aby wymusić rebuild po aktualizacji kodu.
-	$cache_key = 'grofi_cat_tree_v2';
+	$cache_key = 'grofi_cat_tree_v3';
 	$cached    = get_transient( $cache_key );
 
 	// Walidacja: nie przyjmujemy pustej tablicy jako prawidłowego cache'u
@@ -97,6 +100,13 @@ function theme_build_cat_tree_node( array $by_parent, int $parent_id, int $depth
 	$tree = [];
 
 	foreach ( $by_parent[ $parent_id ] as $term ) {
+		if (
+			in_array( mb_strtolower( $term->slug ), GROFI_CAT_TREE_EXCLUDED, true ) ||
+			in_array( mb_strtolower( $term->name ), GROFI_CAT_TREE_EXCLUDED, true )
+		) {
+			continue;
+		}
+
 		$children = theme_build_cat_tree_node( $by_parent, $term->term_id, $depth + 1, $max_depth );
 
 		$tree[] = [
@@ -134,6 +144,13 @@ function _theme_cat_tree_legacy( int $parent_id, int $depth, int $max_depth ): a
 
 	$tree = [];
 	foreach ( $terms as $term ) {
+		if (
+			in_array( mb_strtolower( $term->slug ), GROFI_CAT_TREE_EXCLUDED, true ) ||
+			in_array( mb_strtolower( $term->name ), GROFI_CAT_TREE_EXCLUDED, true )
+		) {
+			continue;
+		}
+
 		$children = $depth + 1 < $max_depth
 			? _theme_cat_tree_legacy( $term->term_id, $depth + 1, $max_depth )
 			: [];
@@ -157,7 +174,7 @@ function _theme_cat_tree_legacy( int $parent_id, int $depth, int $max_depth ): a
  * Wołane przez hooki w woocommerce.php przy zmianie kategorii.
  */
 function theme_flush_cat_tree_cache(): void {
-	delete_transient( 'grofi_cat_tree_v2' );
+	delete_transient( 'grofi_cat_tree_v3' );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

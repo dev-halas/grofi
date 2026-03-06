@@ -50,7 +50,8 @@ h4 {
 
 
 ul:not([class]) {
-    list-style: inside square;
+    list-style: square;
+    padding-left: 16px;
 
     li::marker {
         color: values.$orange;
@@ -120,5 +121,49 @@ ul:not([class]) {
         border-color: values.$orange;
         color: values.$white;
         background-color: values.$orange;
+    }
+}
+
+.grid {
+    display: grid;
+}
+
+.grid--cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+
+    @include mixins.responsive("small") {
+        grid-template-columns: 1fr;
+    }
+}
+
+.grid--cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+
+    @include mixins.responsive("small") {
+        grid-template-columns: 1fr;
+    }
+}
+
+.grid--cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+
+    @include mixins.responsive("tablet") {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.gap32px {
+    gap: 32px;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.grid-item {
+    img {
+        aspect-ratio: 5/4;
+        object-fit: cover;
     }
 }

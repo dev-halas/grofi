@@ -165,7 +165,7 @@ function inject_product_categories_into_menu( array $items, object $args ): arra
 function _grofi_build_product_cat_items( int $parent_db_id ): array {
 
 	// Slugs / names to exclude from the menu (case-insensitive).
-	$excluded_slugs_names = [ 'uncategorized', 'promocje', 'wyprzedaż' ];
+	$excluded_slugs_names = [ 'bez-kategorii', 'bez kategorii', 'uncategorized', 'promocje', 'wyprzedaż' ];
 
 	$terms = get_terms( [
 		'taxonomy'               => 'product_cat',

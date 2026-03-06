@@ -71,14 +71,10 @@ $payment_step   = $needs_shipping ? 4 : 3;
 
 					<?php do_action( 'woocommerce_checkout_before_customer_details' ); ?>
 
-					<div id="customer_details">
-
 						<?php wc_get_template( 'checkout/partials/contact.php', $partial_args ); ?>
 						<?php wc_get_template( 'checkout/partials/address.php', $partial_args ); ?>
 
-						<?php do_action( 'woocommerce_checkout_after_customer_details' ); ?>
-
-					</div>
+					<?php do_action( 'woocommerce_checkout_after_customer_details' ); ?>
 
 				<?php endif; ?>
 

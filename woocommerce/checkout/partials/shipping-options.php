@@ -27,48 +27,55 @@ $packages = WC()->shipping()->get_packages();
 		}
 	?>
 	<ul class="checkout-shipping-list">
-		<?php foreach ( $available as $method ) :
-			$is_chosen = ( $chosen === $method->id );
-			$input_id  = 'shipping_method_' . absint( $i ) . '_' . sanitize_title( $method->id );
-			$meta      = $method->get_meta_data();
-			$desc      = ! empty( $meta ) ? reset( $meta ) : '';
-		?>
-		<li
-			class="checkout-shipping-item"
-			x-data="{ selected: <?php echo $is_chosen ? 'true' : 'false'; ?> }"
-			:class="{ 'checkout-shipping-item--selected': selected }"
-			@shipping-selected.window="selected = ($event.detail === '<?php echo esc_js( $method->id ); ?>')"
-		>
-			<label class="checkout-shipping-item__label" for="<?php echo esc_attr( $input_id ); ?>">
-				<input
-					type="radio"
-					name="shipping_method[<?php echo absint( $i ); ?>]"
-					data-index="<?php echo absint( $i ); ?>"
-					id="<?php echo esc_attr( $input_id ); ?>"
-					value="<?php echo esc_attr( $method->id ); ?>"
-					<?php checked( $is_chosen ); ?>
-					class="shipping_method"
-					@change="$dispatch('shipping-selected', '<?php echo esc_js( $method->id ); ?>')"
+	<?php foreach ( $available as $method ) :
+		$is_chosen = ( $chosen === $method->id );
+		$input_id  = 'shipping_method_' . absint( $i ) . '_' . sanitize_title( $method->id );
+		$meta      = $method->get_meta_data();
+		$logo_url  = ! empty( $meta['logo_url'] ) ? $meta['logo_url'] : '';
+	?>
+
+	<li
+		class="checkout-shipping-item"
+		x-data="{ selected: <?php echo $is_chosen ? 'true' : 'false'; ?> }"
+		:class="{ 'checkout-shipping-item--selected': selected }"
+		@shipping-selected.window="selected = ($event.detail === '<?php echo esc_js( $method->id ); ?>')"
+	>
+		<label class="checkout-shipping-item__label" for="<?php echo esc_attr( $input_id ); ?>">
+			<input
+				type="radio"
+				name="shipping_method[<?php echo absint( $i ); ?>]"
+				data-index="<?php echo absint( $i ); ?>"
+				id="<?php echo esc_attr( $input_id ); ?>"
+				value="<?php echo esc_attr( $method->id ); ?>"
+				<?php checked( $is_chosen ); ?>
+				class="shipping_method"
+				@change="$dispatch('shipping-selected', '<?php echo esc_js( $method->id ); ?>')"
+			/>
+
+			<?php if ( $logo_url ) : ?>
+				<img
+					src="<?php echo esc_url( $logo_url ); ?>"
+					alt="<?php echo esc_attr( $method->get_label() ); ?>"
+					class="checkout-shipping-item__logo"
+					loading="lazy"
 				/>
-				<span class="checkout-shipping-item__content">
-					<span class="checkout-shipping-item__name">
-						<?php echo wp_kses_post( $method->get_label() ); ?>
-					</span>
-					<?php if ( $desc ) : ?>
-						<small class="checkout-shipping-item__desc">
-							<?php echo wp_kses_post( $desc ); ?>
-						</small>
-					<?php endif; ?>
+			<?php endif; ?>
+
+			<span class="checkout-shipping-item__content">
+				<span class="checkout-shipping-item__name">
+					<?php echo wp_kses_post( $method->get_label() ); ?>
 				</span>
-				<span class="checkout-shipping-item__price">
-					<?php if ( 0 == $method->cost ) : ?>
-						<strong><?php esc_html_e( 'BEZPŁATNE', 'grofi' ); ?></strong>
-					<?php else : ?>
-						<?php echo wc_price( $method->cost ); // phpcs:ignore ?>
-					<?php endif; ?>
-				</span>
-			</label>
-		</li>
+			</span>
+
+			<span class="checkout-shipping-item__price">
+				<?php if ( 0 == $method->cost ) : ?>
+					<strong><?php esc_html_e( 'BEZPŁATNE', 'grofi' ); ?></strong>
+				<?php else : ?>
+					<?php echo wc_price( $method->cost ); // phpcs:ignore ?>
+				<?php endif; ?>
+			</span>
+		</label>
+	</li>
 		<?php endforeach; ?>
 	</ul>
 	<?php endforeach; ?>
