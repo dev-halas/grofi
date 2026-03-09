@@ -28,6 +28,10 @@ add_action( 'after_setup_theme', static function (): void {
 
 add_filter( 'woocommerce_enqueue_styles', '__return_empty_array' );
 
+add_filter('woocommerce_product_get_image', function($image) {
+	return str_replace('<img ', '<img loading="lazy" decoding="async" ', $image);
+});
+
 // =============================================================
 // PĘTLA SKLEPU
 // =============================================================

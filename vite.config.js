@@ -1,7 +1,6 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
-const JS_FILE = resolve('_dev/app.js');
 const BUILD_DIR = resolve(__dirname, 'dist');
 
 export default defineConfig({
@@ -11,10 +10,15 @@ export default defineConfig({
     emptyOutDir: true,
     outDir: BUILD_DIR,
     rollupOptions: {
-      input: JS_FILE,
+      input: {
+        app:      resolve('_dev/app.js'),
+        checkout: resolve('_dev/js/checkout.js'),
+        product:  resolve('_dev/js/product-gallery.js'),
+        shop:     resolve('_dev/js/shop-filter.js'),
+      },
       output: {
-        entryFileNames: 'app.js',
-        chunkFileNames: 'app.js',
+        entryFileNames: '[name].js',
+        chunkFileNames: 'chunks/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
           const ext = assetInfo?.names?.[0]?.split('.').pop() || 'unknown';
 

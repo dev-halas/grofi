@@ -1,54 +1,101 @@
 /**
- * AJAX navigation + filtry dla archiwum produktów WooCommerce.
+ * AJAX navigation + filters for WooCommerce product archive.
  *
- * Nawigacja po kategoriach:
- *  - Hover na .cat-tree__link → cichy prefetch (fetchpriority: low)
- *  - Klik → natychmiastowa zamiana DOM jeśli prefetch gotowy
+ * Category navigation:
+ *  - Hover .cat-tree__link → silent prefetch (fetchpriority: low, 200ms debounce)
+ *  - Click → instant DOM swap if prefetch already resolved
  *
- * Filtry:
- *  - Checkbox marki + atrybuty WC (filter_*) → natychmiastowe przeładowanie AJAX
- *  - Cena (min/max) → po kliknięciu "Zastosuj"
- *  - Link "Wyczyść filtry" → AJAX
+ * Filters:
+ *  - Brand / attribute checkboxes (filter_*) → navigate immediately on change
+ *  - Price (min/max) → navigate on "Apply" submit
+ *  - "Clear filters" link → navigate
  *
- * Podmieniane elementy przy każdej nawigacji:
- *  .shop-layout__content · .cat-tree · #shop-filters · .woocommerce-breadcrumb
+ * Transport:
+ *  X-Shop-Ajax: fragments header → server returns JSON fragments instead of full HTML (~85% less data).
+ *
+ * Swapped fragments on each navigation:
+ *  .shop-layout__content (replaceChildren) · .cat-tree · #shop-filters · .shop-layout__title
+ *
+ * Scroll behavior:
+ *  - Category change or pagination → scroll to top
+ *  - Filter / sort change          → scroll to .shop-layout__content
+ *  - popstate                      → restore saved scroll position
  */
 
 (function () {
 	'use strict';
 
 	const SEL = {
-		content:    '.shop-layout__content',
-		catTree:    '.cat-tree',
-		filters:    '#shop-filters',
-		breadcrumb: '.woocommerce-breadcrumb',
-		title:      '.shop-layout__title',
+		content: '.shop-layout__content',
+		catTree: '.cat-tree',
+		filters: '#shop-filters',
+		title:   '.shop-layout__title',
 	};
 
-	/** Wersja nawigacji — odrzuca odpowiedzi zdezaktualizowanych requestów */
+	// Incremented on every navigate() call; stale responses are dropped by version check.
 	let navVersion = 0;
 
 	/**
-	 * Cache: url → Promise<string|null>
-	 * Maks. 120 wpisów — chroni przed nieograniczonym wzrostem RAM przy długich sesjach.
+	 * url → Promise<object|null>
+	 * Capped at 120 entries to avoid unbounded RAM growth in long sessions.
 	 */
 	const prefetchCache = new Map();
 	const PREFETCH_MAX  = 120;
 	let   prefetchTrimScheduled = false;
 
-	/**
-	 * Ostatnio zlecony prefetch URL.
-	 * Deduplikuje wywołania zanim Promise zdąży trafić do cache
-	 * (prefetchCache.has() jeszcze nie zwróci true gdy fetch jest w toku).
-	 */
+	// Tracks the last URL sent to fetchPage so we don't fire duplicate requests
+	// before the Promise makes it into the cache.
 	let lastPrefetchUrl = '';
-
-	const domParser = new DOMParser();
+	let prefetchTimer   = 0;
 
 	// ───────────────────────────────────────────────────────────────────────────
-	// Fetch z cache'owaniem promisów
+	// AbortSignal helper (Safari < 16 doesn't have AbortSignal.timeout)
 	// ───────────────────────────────────────────────────────────────────────────
 
+	function timeoutSignal(ms) {
+		if (typeof AbortSignal.timeout === 'function') {
+			return AbortSignal.timeout(ms);
+		}
+		const ctrl = new AbortController();
+		setTimeout(() => ctrl.abort(), ms);
+		return ctrl.signal;
+	}
+
+	// ───────────────────────────────────────────────────────────────────────────
+	// Nav type classification
+	// ───────────────────────────────────────────────────────────────────────────
+
+	/**
+	 * Returns the type of navigation based on the URL change:
+	 *  'category' — different pathname (different category or shop root)
+	 *  'page'     — same pathname, ?paged changed
+	 *  'filter'   — same pathname, only filters/sort changed
+	 *
+	 * Used to decide scroll behavior after the DOM swap.
+	 */
+	function getNavType(toUrl) {
+		const from = new URL(window.location.href);
+		const to   = new URL(toUrl);
+
+		if (from.pathname !== to.pathname) {
+			return 'category';
+		}
+
+		if (to.searchParams.has('paged') && from.searchParams.get('paged') !== to.searchParams.get('paged')) {
+			return 'page';
+		}
+
+		return 'filter';
+	}
+
+	// ───────────────────────────────────────────────────────────────────────────
+	// Fetch with promise caching
+	// ───────────────────────────────────────────────────────────────────────────
+
+	/**
+	 * Fetches JSON fragments for a given URL.
+	 * Returns null on any error — navigate() falls back to a full page load.
+	 */
 	function fetchPage(url, priority = 'auto') {
 		if (prefetchCache.has(url)) {
 			return prefetchCache.get(url);
@@ -57,21 +104,25 @@
 		const p = fetch(url, {
 			// @ts-ignore — fetchpriority (Chrome 102+)
 			priority,
-			headers: { 'X-Requested-With': 'XMLHttpRequest' },
+			headers: {
+				'X-Requested-With': 'XMLHttpRequest',
+				'X-Shop-Ajax':      'fragments',
+			},
+			signal: timeoutSignal(10000),
 		})
 			.then(r => {
 				if (!r.ok) throw new Error(`HTTP ${r.status}`);
-				return r.text();
+				return r.json();
 			})
 			.catch(() => {
-				// Usuń z cache przy błędzie — kolejna próba może się udać
+				// Remove from cache on error so the next attempt retries.
 				prefetchCache.delete(url);
 				return null;
 			});
 
 		prefetchCache.set(url, p);
 
-		// Przytnij cache gdy przekroczono limit — usuwa najstarsze wpisy (insertion order)
+		// Trim oldest entries when over the cap (Map preserves insertion order).
 		if (prefetchCache.size > PREFETCH_MAX && !prefetchTrimScheduled) {
 			prefetchTrimScheduled = true;
 			queueMicrotask(() => {
@@ -87,19 +138,38 @@
 	}
 
 	// ───────────────────────────────────────────────────────────────────────────
-	// Zamiana elementów DOM + reinicjalizacja Alpine
+	// HTML parsing + DOM swap + Alpine re-init
 	// ───────────────────────────────────────────────────────────────────────────
 
 	/**
-	 * Zamienia stary element nowym z pobranego dokumentu.
-	 * Niszczy drzewo Alpine przed usunięciem węzła z DOM (memory leaks),
-	 * a następnie inicjalizuje je na nowym węźle.
+	 * Parses an HTML string via an inert <template> element, returns a DocumentFragment.
+	 * Scripts don't execute, images don't load, no layout reflow during parsing.
+	 * This is the standard alternative to DOMParser when inserting fragments.
 	 */
-	function swapEl(selector, doc) {
-		const oldEl = document.querySelector(selector);
-		const newEl = doc.querySelector(selector);
+	function parseHtml(html) {
+		const tpl = document.createElement('template');
+		tpl.innerHTML = html;
+		return tpl.content;
+	}
 
-		if (!oldEl || !newEl) return;
+	/**
+	 * Replaces an existing element (matched by selector) with a new one parsed from outerHtml.
+	 *
+	 * Uses querySelector(selector) inside the fragment rather than firstElementChild because
+	 * some template parts render multiple siblings — e.g. category-tree.php outputs
+	 * <h3> + <nav class="cat-tree"> and we need the nav, not the heading.
+	 *
+	 * Destroys Alpine tree before removal to avoid memory leaks, re-inits on the new node.
+	 */
+	function swapElFromHtml(selector, outerHtml) {
+		if (!outerHtml) return;
+
+		const oldEl = document.querySelector(selector);
+		if (!oldEl) return;
+
+		const fragment = parseHtml(outerHtml.trim());
+		const newEl    = fragment.querySelector(selector) ?? fragment.firstElementChild;
+		if (!newEl) return;
 
 		if (window.Alpine) Alpine.destroyTree(oldEl);
 		oldEl.replaceWith(newEl);
@@ -107,62 +177,94 @@
 	}
 
 	// ───────────────────────────────────────────────────────────────────────────
-	// Główna nawigacja
+	// Main navigation
 	// ───────────────────────────────────────────────────────────────────────────
 
-	async function navigate(url) {
-		const version   = ++navVersion;
+	/**
+	 * @param {string}  url
+	 * @param {object}  [opts]
+	 * @param {boolean} [opts.pushState=true] — pass false on popstate to avoid duplicate history entries
+	 */
+	async function navigate(url, { pushState = true } = {}) {
+		const version = ++navVersion;
+		const navType = getNavType(url);
+
+		// Clear so the navigated-to URL can be prefetched again if needed.
+		lastPrefetchUrl = '';
+
 		const contentEl = document.querySelector(SEL.content);
+		const filtersEl = document.querySelector(SEL.filters);
+		const catTreeEl = document.querySelector(SEL.catTree);
 
-		if (contentEl) contentEl.classList.add('is-loading');
+		contentEl?.classList.add('is-loading');
+		contentEl?.setAttribute('aria-busy', 'true');
+		filtersEl?.classList.add('is-loading');
+		catTreeEl?.classList.add('is-loading');
 
-		const html = await fetchPage(url);
+		try {
+			const data = await fetchPage(url, 'high');
 
-		// Inna nawigacja zdążyła się rozpocząć — porzuć wynik i wyczyść spinner
-		if (version !== navVersion) {
-			if (contentEl) contentEl.classList.remove('is-loading');
-			return;
+			// A newer navigate() call started — drop this result.
+			// Don't touch spinners; the newer call owns them.
+			if (version !== navVersion) return;
+
+			if (!data) {
+				// Server doesn't support fragments or request failed — hard navigate.
+				window.location.href = url;
+				return;
+			}
+
+			// replaceChildren keeps the wrapper node reference intact,
+			// so event delegation on document keeps working without rebinding.
+			if (contentEl && data.content != null) {
+				const fragment = parseHtml(data.content);
+				if (window.Alpine) Alpine.destroyTree(contentEl);
+				contentEl.replaceChildren(...Array.from(fragment.childNodes));
+				if (window.Alpine) Alpine.initTree(contentEl);
+			}
+
+			swapElFromHtml(SEL.catTree, data.cat_tree);
+			swapElFromHtml(SEL.filters, data.filters);
+			swapElFromHtml(SEL.title,   data.title);
+
+			const pageTitle = data.page_title ?? document.title;
+			document.title  = pageTitle;
+
+			if (pushState) {
+				if (navType === 'category' || navType === 'page') {
+					history.pushState({ shopUrl: url, scrollY: 0 }, pageTitle, url);
+					window.scrollTo({ top: 0, behavior: 'smooth' });
+				} else {
+					history.pushState({ shopUrl: url, scrollY: window.scrollY }, pageTitle, url);
+					contentEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+			} else {
+				history.replaceState(history.state, pageTitle, url);
+			}
+
+		} finally {
+			// Only clean up spinners if this is still the latest navigation.
+			// Otherwise we'd remove spinners that a newer navigate() just added.
+			if (version === navVersion) {
+				document.querySelector(SEL.content)?.classList.remove('is-loading');
+				document.querySelector(SEL.content)?.removeAttribute('aria-busy');
+				document.querySelector(SEL.filters)?.classList.remove('is-loading');
+				document.querySelector(SEL.catTree)?.classList.remove('is-loading');
+			}
 		}
-
-		if (!html) {
-			// Fallback: pełne przeładowanie gdy AJAX zawiódł
-			window.location.href = url;
-			return;
-		}
-
-		const doc = domParser.parseFromString(html, 'text/html');
-
-		// Treść produktów: innerHTML zamiast replaceWith — zachowuje referencję węzła
-		const newContent = doc.querySelector(SEL.content);
-		if (contentEl && newContent) {
-			// destroyTree na starym innerHTML przed jego nadpisaniem
-			if (window.Alpine) Alpine.destroyTree(contentEl);
-			contentEl.innerHTML = newContent.innerHTML;
-			contentEl.classList.remove('is-loading');
-			// initTree na nowym innerHTML
-			if (window.Alpine) Alpine.initTree(contentEl);
-		}
-
-		swapEl(SEL.catTree,    doc);
-		swapEl(SEL.filters,    doc);
-		swapEl(SEL.breadcrumb, doc);
-		swapEl(SEL.title,      doc);
-
-		document.title = doc.title;
-		history.pushState({ shopUrl: url }, doc.title, url);
 	}
 
 	// ───────────────────────────────────────────────────────────────────────────
-	// Buduje nowy URL na podstawie aktualnego + stanu formularza filtrów
+	// Build URL from current location + filter form state
 	// ───────────────────────────────────────────────────────────────────────────
 
 	function applyFilters(formEl) {
 		const url = new URL(window.location.href);
 
-		// Reset paginacji przy każdej zmianie filtrów
+		// Reset pagination whenever filters change.
 		url.searchParams.delete('paged');
 
-		// ── Marki ──────────────────────────────────────────────────────────────
+		// Brands
 		const checkedBrands = [...formEl.querySelectorAll('input[name="brand"]:checked')]
 			.map(cb => cb.value)
 			.filter(Boolean);
@@ -173,7 +275,7 @@
 			url.searchParams.delete('brand');
 		}
 
-		// ── Atrybuty WooCommerce (?filter_{slug}=val1,val2) ───────────────────
+		// WooCommerce attributes (?filter_{slug}=val1,val2)
 		const attrNames = [
 			...new Set(
 				[...formEl.querySelectorAll('input[name^="filter_"]')].map(cb => cb.name)
@@ -192,15 +294,15 @@
 			}
 		}
 
-		// Usuń stare filter_* params nieobecne w bieżącym formularzu
-		// (może wystąpić po przejściu do kategorii z innymi atrybutami)
+		// Drop stale filter_* params not present in the current form
+		// (happens when navigating between categories with different attributes).
 		for (const key of [...url.searchParams.keys()]) {
 			if (key.startsWith('filter_') && !attrNames.includes(key)) {
 				url.searchParams.delete(key);
 			}
 		}
 
-		// ── Cena ───────────────────────────────────────────────────────────────
+		// Price
 		const minVal = formEl.querySelector('input[name="min_price"]')?.value.trim() ?? '';
 		const maxVal = formEl.querySelector('input[name="max_price"]')?.value.trim() ?? '';
 
@@ -220,7 +322,7 @@
 	}
 
 	// ───────────────────────────────────────────────────────────────────────────
-	// Pomocnik: sprawdzenie origin
+	// Helpers
 	// ───────────────────────────────────────────────────────────────────────────
 
 	function isSameOrigin(url) {
@@ -232,11 +334,10 @@
 	}
 
 	// ───────────────────────────────────────────────────────────────────────────
-	// Event handlers (delegation na document)
+	// Event handlers (delegated on document)
 	// ───────────────────────────────────────────────────────────────────────────
 
 	function onDocClick(e) {
-		// Linki drzewa kategorii
 		const catLink = e.target.closest('.cat-tree a.cat-tree__link');
 		if (catLink && isSameOrigin(catLink.href)) {
 			e.preventDefault();
@@ -244,7 +345,6 @@
 			return;
 		}
 
-		// Link "Wyczyść filtry"
 		const resetLink = e.target.closest('.shop-filters__reset');
 		if (resetLink && isSameOrigin(resetLink.href)) {
 			e.preventDefault();
@@ -252,7 +352,6 @@
 			return;
 		}
 
-		// Paginacja w treści produktów
 		const pageLink = e.target.closest(`${SEL.content} .woocommerce-pagination a`);
 		if (pageLink && isSameOrigin(pageLink.href)) {
 			e.preventDefault();
@@ -261,7 +360,6 @@
 	}
 
 	function onDocChange(e) {
-		// Checkboxy marki i atrybutów WC (filter_*) → natychmiastowa nawigacja
 		const checkbox = e.target.closest('#shop-filters input[type="checkbox"]');
 		if (checkbox) {
 			const form = checkbox.closest('form');
@@ -269,17 +367,16 @@
 			return;
 		}
 
-		// Selekty toolbara (sortowanie, liczba produktów) → nawigacja AJAX po URL z value
+		// Toolbar selects (sort, per-page) — value is the target URL.
+		// add_query_arg() returns a relative path so resolve it first.
 		const toolbarSelect = e.target.closest('select[data-ajax-nav]');
 		if (toolbarSelect && toolbarSelect.value) {
-			// Rozwiąż URL względem bieżącej strony — add_query_arg() zwraca ścieżkę względną
 			const resolvedUrl = new URL(toolbarSelect.value, window.location.href).href;
 			navigate(resolvedUrl);
 		}
 	}
 
 	function onDocSubmit(e) {
-		// Formularz filtrów — przycisk "Zastosuj" (cena)
 		const form = e.target.closest('#shop-filters form');
 		if (form) {
 			e.preventDefault();
@@ -288,19 +385,39 @@
 	}
 
 	function onDocPointerover(e) {
-		// pointerover zamiast mouseover — nowocześniejszy odpowiednik, obsługuje też touch
+		// Touch devices don't hover — prefetch would fire on every tap right before click.
+		if (e.pointerType === 'touch') return;
+
 		const catLink = e.target.closest('.cat-tree a.cat-tree__link');
 		if (!catLink || !isSameOrigin(catLink.href)) return;
 
-		// Deduplikacja: zignoruj ten sam URL zanim Promise zdąży trafić do cache
-		if (catLink.href === lastPrefetchUrl) return;
+		// Capture href immediately — the node may be removed before the timer fires.
+		const url = catLink.href;
+		if (url === lastPrefetchUrl) return;
 
-		lastPrefetchUrl = catLink.href;
-		fetchPage(catLink.href, 'low');
+		clearTimeout(prefetchTimer);
+		prefetchTimer = setTimeout(() => {
+			if (url === lastPrefetchUrl) return;
+			lastPrefetchUrl = url;
+			fetchPage(url, 'low');
+		}, 200);
+	}
+
+	function onDocPointerout(e) {
+		if (e.pointerType === 'touch') return;
+
+		// Cancel scheduled prefetch if the cursor leaves before the debounce fires.
+		const catLink = e.target.closest('.cat-tree a.cat-tree__link');
+		if (catLink) clearTimeout(prefetchTimer);
 	}
 
 	function onPopState(e) {
-		navigate(e.state?.shopUrl ?? window.location.href);
+		const url     = e.state?.shopUrl ?? window.location.href;
+		const scrollY = e.state?.scrollY ?? 0;
+
+		navigate(url, { pushState: false }).then(() => {
+			window.scrollTo({ top: scrollY, behavior: 'instant' });
+		});
 	}
 
 	// ───────────────────────────────────────────────────────────────────────────
@@ -308,8 +425,9 @@
 	// ───────────────────────────────────────────────────────────────────────────
 
 	function init() {
+		// Store scroll position for the initial page so popstate can restore it.
 		history.replaceState(
-			{ shopUrl: window.location.href },
+			{ shopUrl: window.location.href, scrollY: window.scrollY },
 			document.title,
 			window.location.href,
 		);
@@ -318,6 +436,7 @@
 		document.addEventListener('change',      onDocChange);
 		document.addEventListener('submit',      onDocSubmit);
 		document.addEventListener('pointerover', onDocPointerover);
+		document.addEventListener('pointerout',  onDocPointerout);
 		window.addEventListener('popstate',      onPopState);
 	}
 

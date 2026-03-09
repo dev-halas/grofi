@@ -67,29 +67,30 @@
 
 		// Stan ładowania AJAX — przyciemnienie + spinner
 		&.is-loading {
-			opacity: 0.35;
+			opacity: 0.4;
 			pointer-events: none;
 
 			&::after {
 				content: '';
-				position: absolute;
+				position: fixed;
 				top: 50%;
 				left: 50%;
-				transform: translateX(-50%);
-				width: 36px;
-				height: 36px;
-				border: 3px solid rgba(0, 0, 0, 0.1);
+				transform: translate(-50%, -50%);
+				width: 40px;
+				height: 40px;
+				border: 3px solid rgba(0, 0, 0, 0.08);
 				border-top-color: v.$orange;
 				border-radius: 50%;
-				animation: shopContentLoading 0.55s linear infinite;
-				z-index: 10;
+				animation: shopContentLoading 0.6s linear infinite;
+				z-index: 9999;
+				background: #ededed;
 			}
 		}
 	}
 }
 
 @keyframes shopContentLoading {
-	to { transform: translateX(-50%) rotate(360deg); }
+	to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 // -------------------------------------------------------
@@ -396,6 +397,38 @@
 		border: 1px dashed v.$lightGray;
 		border-radius: 10px;
 		text-align: center;
+	}
+}
+
+// -------------------------------------------------------
+// Skeleton — filtry i drzewo kategorii podczas ładowania
+// -------------------------------------------------------
+
+@keyframes skeletonShimmer {
+	0%   { background-position: -200% 0; }
+	100% { background-position:  200% 0; }
+}
+
+.shop-filters,
+.cat-tree {
+	&.is-loading {
+		pointer-events: none;
+		position: relative;
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(
+				90deg,
+				rgba(255, 255, 255, 0) 0%,
+				rgba(255, 255, 255, 0.85) 50%,
+				rgba(255, 255, 255, 0) 100%
+			);
+			background-size: 200% 100%;
+			animation: skeletonShimmer 1.8s ease-in-out infinite;
+			z-index: 10;
+		}
 	}
 }
 

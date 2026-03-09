@@ -1,6 +1,4 @@
-import Alpine from 'alpinejs';
 import { Fancybox } from '@fancyapps/ui';
-import '@fancyapps/ui/dist/fancybox/fancybox.css';
 
 // ─── Stałe modułu ─────────────────────────────────────────────────────────────
 const THUMB_MIN          = 50; // px – minimalna szerokość miniatury na desktopie
@@ -13,7 +11,9 @@ const px = ( val ) => `${ +val.toFixed( 2 ) }px`;
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-Alpine.data( 'productGallery', ( images ) => ( {
+document.addEventListener( 'alpine:init', () => {
+
+window.Alpine.data( 'productGallery', ( images ) => ( {
 	images,
 	activeIndex: 0,
 	_observer:   null,
@@ -113,3 +113,5 @@ Alpine.data( 'productGallery', ( images ) => ( {
 		} );
 	},
 } ) );
+
+} );

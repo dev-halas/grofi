@@ -1,6 +1,6 @@
-import Alpine from 'alpinejs';
+document.addEventListener( 'alpine:init', () => {
 
-Alpine.data( 'checkoutCoupon', () => ( {
+window.Alpine.data( 'checkoutCoupon', () => ( {
 	open: false,
 	code: '',
 	loading: false,
@@ -45,3 +45,5 @@ Alpine.data( 'checkoutCoupon', () => ( {
 		}
 	},
 } ) );
+
+} );

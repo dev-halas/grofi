@@ -4,7 +4,7 @@
  *
  * @see     https://woocommerce.com/document/template-structure/
  * @package WooCommerce\Templates
- * @version 9.4.0 (overridden)
+ * @version 9.4.0
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -26,7 +26,12 @@ $product_name = esc_html( get_the_title( $product_id ) );
     <?php endif; ?>
 
     <a href="<?php echo esc_url( $product_link ); ?>" class="product-card__img-link" tabindex="-1" aria-hidden="true">
-		<?php echo $product->get_image( 'woocommerce_thumbnail', [ 'class' => 'product-card__img', 'alt' => '' ] ); ?>
+		<?php echo $product->get_image( 'woocommerce_thumbnail', [ 
+            'class' => 'product-card__img', 
+            'alt' => $product_name, 
+            'loading' => 'lazy', 
+            'decoding' => 'async',
+        ] ); ?>
     </a>
 
     <div class="product-card__body">
