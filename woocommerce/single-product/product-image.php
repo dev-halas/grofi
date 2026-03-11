@@ -62,7 +62,7 @@ if ( empty( $images ) ) {
 		<img
 			src="<?php echo esc_url( $img['src'] ); ?>"
 			alt="<?php echo esc_attr( $img['alt'] ); ?>"
-			class="product-gallery__main-img"
+			class="product-gallery__main-img<?php echo $i === 0 ? ' product-gallery__main-img--active' : ''; ?>"
 			:class="{ 'product-gallery__main-img--active': activeIndex === <?php echo (int) $i; ?> }"
 			width="600"
 			height="600"

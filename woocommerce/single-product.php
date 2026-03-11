@@ -41,9 +41,7 @@ while (have_posts()) :
 	<div id="product-<?php the_ID(); ?>" <?php wc_product_class('product', $product); ?>>
 
 		<?php // ── Galeria ──────────────────────────────────────────── ?>
-		<div class="woocommerce-product-gallery">
-			<?php woocommerce_show_product_images(); ?>
-		</div>
+		<?php woocommerce_show_product_images(); ?>
 
 		<?php // ── Kolumna informacji ───────────────────────────────── ?>
 		<div class="summary entry-summary">

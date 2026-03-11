@@ -1,7 +1,23 @@
 // clients-carousel.js
 import Swiper from 'swiper';
-import { Autoplay, A11y } from 'swiper/modules';
+import { Autoplay, A11y, Navigation } from 'swiper/modules';
 import 'swiper/css';
+
+function initHeroSlider() {
+  const el = document.querySelector('.heroSlider__swiper');
+  if (!el) return;
+
+  new Swiper(el, {
+    modules: [Navigation, A11y],
+    loop: true,
+    speed: 600,
+    a11y: { enabled: true },
+    navigation: {
+      nextEl: '.heroSlider__nav--next',
+      prevEl: '.heroSlider__nav--prev',
+    },
+  });
+}
 
 export function initCarousel(_config) {
   const {
@@ -37,7 +53,7 @@ export function initCarousel(_config) {
 }
 
 const clientCarouselConfig = {
-  selector: '.clients-swiper',
+  selector: '.logo-carousel',
   breakpoints: {
     0: { 
       slidesPerView: 2, 
@@ -50,7 +66,7 @@ const clientCarouselConfig = {
       // speed: 3000,
     },
     1200: { 
-      slidesPerView: 4, 
+      slidesPerView: 6, 
       spaceBetween: 32,
       // speed: 4000,
     },
@@ -81,6 +97,7 @@ const projectsCarouselConfig = {
 
 if (typeof window !== 'undefined') {
   const run = () => {
+    initHeroSlider();
     initCarousel(clientCarouselConfig);
     initCarousel(projectsCarouselConfig);
   };

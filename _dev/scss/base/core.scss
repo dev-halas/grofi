@@ -88,6 +88,10 @@ ul:not([class]) {
     color: values.$orange;
 }
 
+.fontDarkOrange {
+    color: values.$darkOrange;
+}
+
 .button {
     display: flex;
     align-items: center;
@@ -97,6 +101,9 @@ ul:not([class]) {
     text-decoration: none;
     cursor: pointer;
     text-align: center;
+
+    display: inline-flex;
+    gap: 12px;
 
     @include mixins.transition('all');
 }
@@ -121,6 +128,18 @@ ul:not([class]) {
         border-color: values.$orange;
         color: values.$white;
         background-color: values.$orange;
+    }
+}
+
+.button--outline {
+    background-color: transparent;
+    border: 1px solid values.$white;
+    color: values.$white;
+    font-weight: 500;
+
+    &:hover {
+        background-color: values.$white;
+        color: values.$orange;
     }
 }
 
