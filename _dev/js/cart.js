@@ -34,9 +34,25 @@ const BRIDGED_EVENTS = new Set([
 Alpine.store('cart', {
 	open: false,
 
+	// Mapa { cart_item_key: true } śledzona przez Alpine
+	updatingItems: {},
+
 	toggle()    { this.open = !this.open; },
 	openCart()  { this.open = true;  },
 	closeCart() { this.open = false; },
+
+	isUpdating( key ) {
+		return !!this.updatingItems[ key ];
+	},
+
+	// Ustawia stan ładowania dla pozycji – nowa referencja obiektu
+	// wymusza reaktywność Alpine (plain mutation Set nie działa).
+	_setUpdating( key, val ) {
+		const copy = { ...this.updatingItems };
+		if ( val ) copy[ key ] = true;
+		else delete copy[ key ];
+		this.updatingItems = copy;
+	},
 
 	init() {
 		Alpine.effect(() => {
@@ -240,6 +256,82 @@ document.addEventListener('click', (e) => {
 
 	input.value = next;
 	input.dispatchEvent(new Event('change', { bubbles: true }));
+});
+
+
+// ── Aktualizacja ilości – koszyk i minicart (Alpine + AJAX) ─
+//
+// Jeden handler obsługuje oba konteksty:
+//   • Strona koszyka  – input.name = "cart[{key}][qty]", nonce z #woocommerce-cart-nonce
+//   • Minicart        – input[data-cart-item-key], input[data-nonce]
+//
+// Alpine store zarządza stanem ładowania per pozycja (:class w PHP partialu).
+// Debounce 600 ms – czekamy na zakończenie klikania steppera.
+
+const CART_QTY_DEBOUNCE = 600;
+
+/** @type {Map<string, ReturnType<typeof setTimeout>>} */
+const qtyDebounceMap = new Map();
+
+document.addEventListener('change', (e) => {
+	const input = e.target.closest('input.qty');
+	if (!input) return;
+
+	let cartItemKey, nonce;
+
+	// Kontekst: strona koszyka
+	if (input.closest('.woocommerce-cart-form')) {
+		const match = input.name?.match(/^cart\[([^\]]+)\]\[qty\]$/);
+		if (!match) return;
+		cartItemKey = match[1];
+		nonce = document.querySelector('#woocommerce-cart-nonce')?.value ?? '';
+
+	// Kontekst: minicart
+	} else if (input.dataset.cartItemKey) {
+		cartItemKey = input.dataset.cartItemKey;
+		nonce       = input.dataset.nonce ?? '';
+
+	} else {
+		return;
+	}
+
+	if (qtyDebounceMap.has(cartItemKey)) {
+		clearTimeout(qtyDebounceMap.get(cartItemKey));
+	}
+
+	const quantity = parseFloat(input.value) || 0;
+	const store    = Alpine.store('cart');
+
+	const timer = setTimeout(async () => {
+		qtyDebounceMap.delete(cartItemKey);
+		store._setUpdating(cartItemKey, true);
+
+		try {
+			const res = await fetch(`${WC_AJAX_BASE}grofi_update_cart_qty`, {
+				method:      'POST',
+				credentials: 'same-origin',
+				headers:     { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body:        new URLSearchParams({ cart_item_key: cartItemKey, quantity, nonce }),
+			});
+
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+			const data = await res.json();
+			if (!data.success) throw new Error(data.data?.message ?? 'Update failed');
+
+			applyFragments(data.data.fragments);
+
+		} catch {
+			// Fallback: przeładuj tylko gdy na stronie koszyka
+			if (document.body.classList.contains('woocommerce-cart')) {
+				window.location.reload();
+			}
+		} finally {
+			store._setUpdating(cartItemKey, false);
+		}
+	}, CART_QTY_DEBOUNCE);
+
+	qtyDebounceMap.set(cartItemKey, timer);
 });
 
 

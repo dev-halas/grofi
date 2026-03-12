@@ -60,7 +60,6 @@ get_header();
         woocommerce_product_loop_end();
 
         do_action( 'woocommerce_after_shop_loop' );
-        woocommerce_pagination();
 			?>
 
 		<?php else : ?>

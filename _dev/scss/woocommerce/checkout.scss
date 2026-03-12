@@ -80,6 +80,11 @@ body.woocommerce-checkout {
     display: flex;
     flex-direction: column;
     gap: 16px;
+
+    .checkout-section__title--summary {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
   }
 
   &--payment {
@@ -842,13 +847,6 @@ body.woocommerce-checkout {
 
   &__message {
     margin-top: 8px;
-
-    .woocommerce-message,
-    .woocommerce-error,
-    .woocommerce-info {
-      padding: 8px 12px;
-      margin: 0;
-    }
   }
 }
 

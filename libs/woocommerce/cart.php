@@ -46,6 +46,7 @@ function grofi_cart_button(): void {
 function grofi_minicart_content(): void {
 	$cart  = WC()->cart;
 	$items = $cart->get_cart();
+	$nonce = wp_create_nonce( 'woocommerce-cart' );
 	?>
 	<div class="minicart__content">
 		<div class="minicart__body">
@@ -57,25 +58,51 @@ function grofi_minicart_content(): void {
 						$product    = apply_filters( 'woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key );
 						$product_id = apply_filters( 'woocommerce_cart_item_product_id', $cart_item['product_id'], $cart_item, $cart_item_key );
 						$quantity   = $cart_item['quantity'];
+						$max_qty    = $product->is_sold_individually() ? 1 : $product->get_max_purchase_quantity();
 						$thumbnail  = apply_filters( 'woocommerce_cart_item_thumbnail', $product->get_image( 'woocommerce_thumbnail' ), $cart_item, $cart_item_key );
 						$name       = apply_filters( 'woocommerce_cart_item_name', $product->get_name(), $cart_item, $cart_item_key );
 						$subtotal   = apply_filters( 'woocommerce_cart_item_subtotal', $cart->get_product_subtotal( $product, $quantity ), $cart_item, $cart_item_key );
 						$remove_url = wc_get_cart_remove_url( $cart_item_key );
 					?>
-					<li class="minicart__item">
+					<li class="minicart__item"
+						:class="{ 'minicart__item--updating': $store.cart.isUpdating('<?php echo esc_js( $cart_item_key ); ?>') }">
+
 						<a href="<?php echo esc_url( get_permalink( $product_id ) ); ?>" class="minicart__item-img">
-							<?php echo $thumbnail; ?>
+							<?php echo $thumbnail; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</a>
+
 						<div class="minicart__item-details">
 							<a href="<?php echo esc_url( get_permalink( $product_id ) ); ?>" class="minicart__item-name">
 								<?php echo esc_html( $name ); ?>
 							</a>
-							<div class="minicart__item-meta">
-								<span class="minicart__item-qty"><?php echo esc_html( $quantity ); ?></span>
-								<span class="minicart__item-x">×</span>
-								<span class="minicart__item-price"><?php echo $subtotal; ?></span>
+							<div class="minicart__item-bottom">
+								<div class="qty-stepper">
+									<button
+										type="button"
+										class="qty-stepper__btn qty-stepper__btn--minus"
+										aria-label="<?php esc_attr_e( 'Zmniejsz ilość', 'grofi' ); ?>"
+									><img src="<?php echo esc_url( get_template_directory_uri() . '/_dev/assets/icons/minus.svg' ); ?>" alt="-"></button>
+									<input
+										type="number"
+										class="input-text qty text"
+										value="<?php echo esc_attr( $quantity ); ?>"
+										min="0"
+										max="<?php echo esc_attr( $max_qty > 0 ? $max_qty : '' ); ?>"
+										step="1"
+										data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>"
+										data-nonce="<?php echo esc_attr( $nonce ); ?>"
+										aria-label="<?php echo esc_attr( sprintf( __( '%s quantity', 'woocommerce' ), wp_strip_all_tags( $name ) ) ); ?>"
+									/>
+									<button
+										type="button"
+										class="qty-stepper__btn qty-stepper__btn--plus"
+										aria-label="<?php esc_attr_e( 'Zwiększ ilość', 'grofi' ); ?>"
+									><img src="<?php echo esc_url( get_template_directory_uri() . '/_dev/assets/icons/plus.svg' ); ?>" alt="+"></button>
+								</div>
+								<span class="minicart__item-price"><?php echo $subtotal; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 							</div>
 						</div>
+
 						<a href="<?php echo esc_url( $remove_url ); ?>"
 						   class="minicart__item-remove"
 						   aria-label="<?php esc_attr_e( 'Usuń produkt', 'grofi' ); ?>"
@@ -93,7 +120,7 @@ function grofi_minicart_content(): void {
 		<div class="minicart__footer">
 			<div class="minicart__total">
 				<span><?php esc_html_e( 'Łącznie:', 'grofi' ); ?></span>
-				<strong><?php echo $cart->get_cart_total(); ?></strong>
+				<strong><?php echo $cart->get_cart_total(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong>
 			</div>
 			<div class="minicart__actions">
 				<a href="<?php echo esc_url( wc_get_cart_url() ); ?>" class="button button--light">
@@ -110,12 +137,33 @@ function grofi_minicart_content(): void {
 
 
 // -------------------------------------------------------
-// Fragment AJAX koszyka + minicart
+// Helper: renderuje HTML listy pozycji koszyka do fragmentu.
+//
+// Używany w filtrze woocommerce_add_to_cart_fragments, żeby
+// po każdej zmianie ilości odświeżyć div.cart-items i ceny
+// na stronie koszyka bez przeładowania strony.
+// -------------------------------------------------------
+function grofi_render_cart_items_html(): string {
+	if ( WC()->cart->is_empty() ) {
+		return '';
+	}
+
+	ob_start();
+	include get_theme_file_path( 'woocommerce/cart/partials/cart-items.php' );
+	return ob_get_clean();
+}
+
+
+// -------------------------------------------------------
+// Fragment AJAX koszyka + minicart + strona koszyka
 //
 // Selektor musi pasować do outerHTML elementu w DOM.
-// Używamy 'a.cartButton' i 'div.minicart__content' –
 // cart.js wywołuje /?wc-ajax=get_refreshed_fragments
 // i podmienia elementy przez applyFragments().
+//
+// Fragmenty strony koszyka (div.cart-items, div.cart_totals)
+// są pomijane przez applyFragments gdy nie ma ich w DOM –
+// np. gdy użytkownik jest na innej stronie.
 // -------------------------------------------------------
 add_filter( 'woocommerce_add_to_cart_fragments', function ( array $fragments ): array {
 	ob_start();
@@ -126,9 +174,53 @@ add_filter( 'woocommerce_add_to_cart_fragments', function ( array $fragments ): 
 	grofi_minicart_content();
 	$fragments['div.minicart__content'] = ob_get_clean();
 
+	// Fragmenty strony koszyka – pozycje i podsumowanie
+	$items_html = grofi_render_cart_items_html();
+	if ( $items_html ) {
+		$fragments['div.cart-items'] = $items_html;
+	}
+
+	ob_start();
+	woocommerce_cart_totals();
+	$fragments['div.cart_totals'] = ob_get_clean();
+
 	return $fragments;
 } );
 
+
+// -------------------------------------------------------
+// AJAX: zaktualizuj ilość produktu w koszyku + zwróć fragmenty
+//
+// Endpoint: /?wc-ajax=grofi_update_cart_qty (POST)
+// Pola: cart_item_key, quantity, nonce
+// -------------------------------------------------------
+add_action( 'wc_ajax_grofi_update_cart_qty', function (): void {
+	$nonce = sanitize_text_field( wp_unslash( $_POST['nonce'] ?? '' ) );
+
+	if ( ! wp_verify_nonce( $nonce, 'woocommerce-cart' ) ) {
+		wp_send_json_error( [ 'message' => 'Invalid nonce' ], 403 );
+	}
+
+	$cart_item_key = sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ?? '' ) );
+	$quantity      = (float) ( $_POST['quantity'] ?? 0 );
+
+	if ( empty( $cart_item_key ) ) {
+		wp_send_json_error( [ 'message' => 'Missing cart_item_key' ], 400 );
+	}
+
+	if ( $quantity <= 0 ) {
+		WC()->cart->remove_cart_item( $cart_item_key );
+	} else {
+		WC()->cart->set_quantity( $cart_item_key, $quantity, true );
+	}
+
+	$fragments = apply_filters( 'woocommerce_add_to_cart_fragments', [] );
+
+	wp_send_json_success( [
+		'fragments' => $fragments,
+		'cart_hash' => WC()->cart->get_cart_hash(),
+	] );
+} );
 
 // -------------------------------------------------------
 // AJAX: usuń produkt z koszyka + zwróć fragmenty w jednym żądaniu

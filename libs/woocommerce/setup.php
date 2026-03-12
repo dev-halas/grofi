@@ -37,13 +37,33 @@ add_filter('woocommerce_product_get_image', function($image) {
 // =============================================================
 
 add_filter( 'loop_shop_per_page', static function (): int {
-	$allowed   = [ 16, 32, 48 ];
+	$allowed   = [ 24, 32, 48 ];
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	$requested = isset( $_GET['per_page'] ) ? (int) $_GET['per_page'] : 0;
-	return in_array( $requested, $allowed, true ) ? $requested : 16;
+	return in_array( $requested, $allowed, true ) ? $requested : 24;
 }, 20 );
 
 add_filter( 'loop_shop_columns', static fn (): int => 3 );
+
+/**
+ * Hide the "In stock" message on product page.
+ *
+ * @param string $html
+ * @param string $text
+ * @param WC_Product $product
+ * @return string
+ */
+function my_wc_hide_in_stock_message( $html, $text, $product ) {
+	$availability = $product->get_availability();
+
+	if ( isset( $availability['class'] ) && 'in-stock' === $availability['class'] ) {
+		return '';
+	}
+
+	return $html;
+}
+
+add_filter( 'woocommerce_stock_html', 'my_wc_hide_in_stock_message', 10, 3 );
 
 // =============================================================
 // HELPERS – logika pakowania

@@ -15,7 +15,7 @@ $current_orderby = isset( $_GET['orderby'] )
 
 $current_per_page = isset( $_GET['per_page'] )
 	? (int) $_GET['per_page']
-	: (int) apply_filters( 'loop_shop_per_page', 16 );
+	: (int) apply_filters( 'loop_shop_per_page', 24 );
 // phpcs:enable
 
 $orderby_options = apply_filters( 'woocommerce_catalog_orderby', [
@@ -27,7 +27,7 @@ $orderby_options = apply_filters( 'woocommerce_catalog_orderby', [
 	'price-desc' => __( 'Sortuj wg ceny: malejąco', 'woocommerce' ),
 ] );
 
-$per_page_options = [ 16, 32, 48 ];
+$per_page_options = [ 24, 32, 48 ];
 ?>
 
 <div class="shop-toolbar">
