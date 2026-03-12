@@ -65,6 +65,10 @@
 		position: relative;
 		transition: opacity 0.18s ease;
 
+		@include m.responsive('small') {
+			grid-column: span 1;
+		}
+
 		// Stan ładowania AJAX — przyciemnienie + spinner
 		&.is-loading {
 			opacity: 0.4;
@@ -360,17 +364,89 @@
 }
 
 
+// -------------------------------------------------------
+// Mobile sidebar toggle
+// -------------------------------------------------------
+.mobile-sidebar__title {
+	display: none;
+
+	@include m.responsive('small') {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 14px 12px;
+		font-weight: 700;
+		background-color: v.$whiteOrange;
+		color: v.$black;
+		border: 1px solid v.$lightGray;
+		cursor: pointer;
+		user-select: none;
+
+		&::after {
+			content: '';
+			width: 10px;
+			height: 6px;
+			background-color: v.$orange;
+			clip-path: polygon(0 0, 100% 0, 50% 100%);
+			flex-shrink: 0;
+			transition: transform 0.2s ease;
+		}
+
+		&[aria-expanded='true']::after {
+			transform: rotate(180deg);
+		}
+	}
+}
+
+.sidebar-content {
+	@include m.responsive('small') {
+		display: none;
+
+		&.is-open {
+			display: block;
+		}
+	}
+}
+
 // Sidebar sklepu
 .shop-sidebar {
 
 	&__title {
-		font-size: 1.25rem;
+		font-size: 1rem;
 		font-weight: 700;
-		color: v.$black;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 64px;
+		color: v.$darkOrange;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		height: 48px;
+		padding: 0 1rem;
+		border: 1px solid v.$lightGray;
+		border-bottom: 2px solid;
+		border-bottom-color: v.$orange;
+
+		@include m.responsive('small') {
+			font-size: 0.85rem;
+			padding: 0 0.75rem;
+			margin-top: 8px;
+		}
+
+		&--toggle {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+			cursor: pointer;
+			user-select: none;
+		}
+	}
+
+	&__title-icon {
+		flex-shrink: 0;
+		color: v.$orange;
+		transition: transform 0.2s ease;
+
+		.shop-sidebar__title--toggle[aria-expanded='true'] & {
+			transform: rotate(180deg);
+		}
 	}
 
 	&__widget {
@@ -409,8 +485,13 @@
 	100% { background-position:  200% 0; }
 }
 
+.cat-tree {
+	border-top: none;
+}
+
 .shop-filters,
 .cat-tree {
+	
 	&.is-loading {
 		pointer-events: none;
 		position: relative;
@@ -706,6 +787,10 @@ ul.products li.product,
     padding: 0.75rem 1rem;
     transition: background-color 0.18s ease;
 
+		@include m.responsive('small') {
+			padding: 0.5rem 0.75rem;
+		}
+
     // Aktywna kategoria
     &.is-active .cat-tree__link {
         color: v.$orange;
@@ -729,6 +814,10 @@ ul.products li.product,
     font-weight: 600;
     transition: color 0.18s ease;
 
+		@include m.responsive('small') {
+			font-size: 0.9rem;
+		}
+
     &:hover {
         color: v.$orange;
         text-decoration: none;
@@ -741,7 +830,7 @@ ul.products li.product,
 .cat-tree__list--depth-3 {
     .cat-tree__link {
         font-weight: 300;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 }
 

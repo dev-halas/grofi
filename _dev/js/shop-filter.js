@@ -233,10 +233,9 @@
 			if (pushState) {
 				if (navType === 'category' || navType === 'page') {
 					history.pushState({ shopUrl: url, scrollY: 0 }, pageTitle, url);
-					window.scrollTo({ top: 0, behavior: 'smooth' });
+					contentEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 				} else {
 					history.pushState({ shopUrl: url, scrollY: window.scrollY }, pageTitle, url);
-					contentEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 				}
 			} else {
 				history.replaceState(history.state, pageTitle, url);
@@ -424,6 +423,33 @@
 	// Init
 	// ───────────────────────────────────────────────────────────────────────────
 
+	function initCatTreeToggle() {
+		document.addEventListener('click', (e) => {
+			const toggle = e.target.closest('.shop-sidebar__title--toggle');
+			if (!toggle) return;
+
+			const nav = toggle.nextElementSibling?.closest('.cat-tree');
+			if (!nav) return;
+
+			const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+			toggle.setAttribute('aria-expanded', String(!isExpanded));
+			nav.style.display = isExpanded ? 'none' : '';
+		});
+	}
+
+	function initMobileSidebarToggle() {
+		const toggle = document.querySelector('.mobile-sidebar__toggle');
+		if (!toggle) return;
+
+		toggle.addEventListener('click', () => {
+			const content = toggle.closest('aside')?.querySelector('.sidebar-content');
+			if (!content) return;
+
+			const isOpen = content.classList.toggle('is-open');
+			toggle.setAttribute('aria-expanded', String(isOpen));
+		});
+	}
+
 	function init() {
 		// Store scroll position for the initial page so popstate can restore it.
 		history.replaceState(
@@ -438,6 +464,9 @@
 		document.addEventListener('pointerover', onDocPointerover);
 		document.addEventListener('pointerout',  onDocPointerout);
 		window.addEventListener('popstate',      onPopState);
+
+		initCatTreeToggle();
+		initMobileSidebarToggle();
 	}
 
 	if (document.readyState === 'loading') {

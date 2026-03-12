@@ -19,7 +19,10 @@ if ( empty( $cat_tree ) ) {
 }
 ?>
 
-<h3 class="shop-sidebar__title">Kategorie produktów</h3>
+<h3 class="shop-sidebar__title shop-sidebar__title--toggle" aria-expanded="true">
+    Kategorie produktów
+    <svg class="shop-sidebar__title-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</h3>
 <nav class="cat-tree shop-sidebar__widget"
      aria-label="<?php esc_attr_e( 'Kategorie produktów', 'grofi' ); ?>">
     <?php theme_render_cat_tree( $cat_tree, $active_ids, 0 ); ?>

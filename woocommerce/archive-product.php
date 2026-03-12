@@ -28,11 +28,13 @@ get_header();
 
 	<aside class="shop-layout__sidebar">
 
-    <!-- Category Tree & Shop Filters -->
-		<?php 
-			get_template_part( 'woocommerce/template-parts/category-tree' );
-			get_template_part( 'woocommerce/template-parts/shop-filters' );
-		?>
+		<div class="mobile-sidebar__title mobile-sidebar__toggle" aria-expanded="false">Kategorie i filtry</div>
+		<div class="sidebar-content">
+			<?php
+				get_template_part( 'woocommerce/template-parts/category-tree' );
+				get_template_part( 'woocommerce/template-parts/shop-filters' );
+			?>
+		</div>
 
 		<?php if ( is_active_sidebar('shop-sidebar') ) : ?>
 			<div class="shop-sidebar">
